@@ -2,6 +2,7 @@ try:
     from collections import OrderedDict
 except ImportError:
     from ordereddict import OrderedDict
+from contextlib import contextmanager
 from itertools import product
 import time
 
@@ -14,6 +15,12 @@ class Benchmark(object):
     method = None
     name = 'Benchmark'
     timer = time.time
+
+    @contextmanager
+    def timed_region(self, name):
+        t_ = self.timer()
+        yield
+        self.regions[name] += self.timer() - t_
 
     def run(self, **kwargs):
         params = kwargs.pop('params', self.params)
