@@ -48,6 +48,10 @@ class Benchmark(object):
             times = [bench() for _ in range(repeats)]
             if times:
                 # Average over all timed regions
-                timings[pvalues] = dict((k, average(d[k] for d in times))
-                                        for k in self.regions.keys())
+                times = dict((k, average(d[k] for d in times))
+                             for k in self.regions.keys())
+                if pvalues:
+                    timings[pvalues] = times
+                else:
+                    timings = times
         return {'name': name, 'timings': timings}

@@ -4,7 +4,7 @@ from pybench import Benchmark
 
 
 def test_no_params():
-    assert Benchmark().run(method=lambda: None)['timings'][()]['total'] > 0.0
+    assert Benchmark().run(method=lambda: None)['timings']['total'] > 0.0
 
 
 def test_no_repeats():
@@ -16,7 +16,7 @@ def test_method():
         def test(self):
             pass
 
-    assert Foo().run()['timings'][()]['total'] > 0.0
+    assert Foo().run()['timings']['total'] > 0.0
 
 
 def test_sleep():
