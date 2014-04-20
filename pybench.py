@@ -2,6 +2,7 @@ try:
     from collections import OrderedDict
 except ImportError:
     from ordereddict import OrderedDict
+from collections import defaultdict
 from contextlib import contextmanager
 from itertools import product
 import time
@@ -29,17 +30,21 @@ class Benchmark(object):
         average = kwargs.pop('average', self.average)
         method = kwargs.pop('method', self.method)
         name = kwargs.pop('name', self.name)
-        timer = kwargs.pop('timer', self.timer)
 
         timings = {}
         for pvalues in product(*params.values()):
             kargs = OrderedDict(zip(params.keys(), pvalues))
 
-            def bench():
-                t_ = timer()
-                method(**kargs)
-                return timer() - t_
             for _ in range(warmups):
                 method(**kargs)
-            timings[pvalues] = average(bench() for _ in range(repeats))
+
+            def bench():
+                self.regions = defaultdict(float)
+                with self.timed_region('total'):
+                    method(**kargs)
+                return self.regions
+            times = [bench() for _ in range(repeats)]
+            # Average over all timed regions
+            timings[pvalues] = dict((k, average(d[k] for d in times))
+                                    for k in self.regions.keys())
         return {'name': name, 'timings': timings}
