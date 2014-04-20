@@ -11,6 +11,14 @@ def test_no_repeats():
     assert not Benchmark().run(method=lambda: None, repeats=0)['timings']
 
 
+def test_method():
+    class Foo(Benchmark):
+        def test(self):
+            pass
+
+    assert Foo().run()['timings'][()]['total'] > 0.0
+
+
 def test_sleep():
     def myfunc(n, duration):
         for _ in range(n):

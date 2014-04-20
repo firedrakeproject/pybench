@@ -13,7 +13,7 @@ class Benchmark(object):
     repeats = 3
     warmups = 1
     average = min
-    method = None
+    method = 'test'
     name = 'Benchmark'
     timer = time.time
 
@@ -30,6 +30,8 @@ class Benchmark(object):
         average = kwargs.pop('average', self.average)
         method = kwargs.pop('method', self.method)
         name = kwargs.pop('name', self.name)
+        if isinstance(method, str):
+            method = getattr(self, method)
 
         timings = {}
         for pvalues in product(*params.values()):
