@@ -7,6 +7,10 @@ def test_no_params():
     assert Benchmark().run(method=lambda: None)['timings'][()]['total'] > 0.0
 
 
+def test_no_repeats():
+    assert not Benchmark().run(method=lambda: None, repeats=0)['timings']
+
+
 def test_sleep():
     def myfunc(n, duration):
         for _ in range(n):

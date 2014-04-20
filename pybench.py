@@ -44,7 +44,8 @@ class Benchmark(object):
                     method(**kargs)
                 return self.regions
             times = [bench() for _ in range(repeats)]
-            # Average over all timed regions
-            timings[pvalues] = dict((k, average(d[k] for d in times))
-                                    for k in self.regions.keys())
+            if times:
+                # Average over all timed regions
+                timings[pvalues] = dict((k, average(d[k] for d in times))
+                                        for k in self.regions.keys())
         return {'name': name, 'timings': timings}
