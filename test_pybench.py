@@ -3,6 +3,10 @@ from time import sleep
 from pybench import Benchmark
 
 
+def test_no_params():
+    assert Benchmark().run(method=lambda: None)['timings'][()]['total'] > 0.0
+
+
 def test_sleep():
     def myfunc(n, duration):
         for _ in range(n):
