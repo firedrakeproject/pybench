@@ -34,6 +34,7 @@ class Benchmark(object):
             method = getattr(self, method)
 
         timings = {}
+        self.regions = defaultdict(float)
         for pvalues in product(*params.values()):
             kargs = OrderedDict(zip(params.keys(), pvalues))
 
@@ -46,12 +47,11 @@ class Benchmark(object):
                     method(**kargs)
                 return self.regions
             times = [bench() for _ in range(repeats)]
-            if times:
-                # Average over all timed regions
-                times = dict((k, average(d[k] for d in times))
-                             for k in self.regions.keys())
-                if pvalues:
-                    timings[pvalues] = times
-                else:
-                    timings = times
+            # Average over all timed regions
+            times = dict((k, average(d[k] for d in times))
+                         for k in self.regions.keys())
+            if pvalues:
+                timings[pvalues] = times
+            else:
+                timings = times
         return {'name': name, 'timings': timings}

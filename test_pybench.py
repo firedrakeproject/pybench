@@ -27,3 +27,13 @@ def test_sleep():
                             params={'n': range(3), 'duration': (0.001, 0.002)})
     for (n, d), t in times['timings'].items():
         assert abs(n*d - t['total']) < 1e-3
+
+
+def test_timed_region():
+    class Foo(Benchmark):
+        def test(self):
+            with self.timed_region('stuff'):
+                pass
+
+    assert Foo().run()['timings']['total'] > 0.0
+    assert Foo().run()['timings']['stuff'] > 0.0
