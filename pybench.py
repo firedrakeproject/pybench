@@ -23,6 +23,13 @@ class Benchmark(object):
     method = 'test'
     timer = time.time
 
+    def __init__(self, **kwargs):
+        self.resultsdir = path.join(path.dirname(getfile(self.__class__)), 'results')
+        for k, v in kwargs:
+            setattr(self, k, v)
+        if not path.exists(self.resultsdir):
+            makedirs(self.resultsdir)
+
     @contextmanager
     def timed_region(self, name):
         t_ = self.timer()
@@ -80,7 +87,7 @@ class Benchmark(object):
         regions = kwargs.pop('regions', self.regions.keys())
         title = kwargs.pop('title', self.__class__.__name__)
         format = kwargs.pop('format', 'svg')
-        plotdir = kwargs.pop('plotdir', path.join(path.dirname(getfile(self.__class__)), 'results'))
+        plotdir = kwargs.pop('plotdir', self.resultsdir)
         if not path.exists(plotdir):
             makedirs(plotdir)
 
