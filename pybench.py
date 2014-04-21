@@ -79,6 +79,7 @@ class Benchmark(object):
                        'warmups': warmups,
                        'average': average.__name__,
                        'method': method.__name__,
+                       'regions': self.regions.keys(),
                        'timings': timings}
         if self.save:
             with open(path.join(self.resultsdir, name + '.dat'), 'w') as f:
@@ -92,12 +93,12 @@ class Benchmark(object):
 
     def plot(self, xaxis, **kwargs):
         timings = kwargs.pop('timings', self.result['timings'])
-        figname = kwargs.pop('figname', self.__class__.__name__)
+        figname = kwargs.pop('figname', self.name)
         params = kwargs.pop('params', self.params)
         legend_pos = kwargs.pop('legend_pos', 'best')
         ylabel = kwargs.pop('ylabel', 'time [sec]')
-        regions = kwargs.pop('regions', self.regions.keys())
-        title = kwargs.pop('title', self.__class__.__name__)
+        regions = kwargs.pop('regions', self.result['regions'])
+        title = kwargs.pop('title', self.name)
         format = kwargs.pop('format', 'svg')
         plotdir = kwargs.pop('plotdir', self.resultsdir)
         if not path.exists(plotdir):
