@@ -24,11 +24,12 @@ class Benchmark(object):
         self.regions[name] += self.timer() - t_
 
     def run(self, **kwargs):
+        name = kwargs.pop('name', self.__class__.__name__)
+        description = kwargs.pop('description', self.__doc__)
         params = kwargs.pop('params', self.params)
         repeats = kwargs.pop('repeats', self.repeats)
         warmups = kwargs.pop('warmups', self.warmups)
         average = kwargs.pop('average', self.average)
-        name = kwargs.pop('name', self.__class__.__name__)
         method = kwargs.pop('method', self.method)
         if isinstance(method, str):
             method = getattr(self, method)
@@ -54,4 +55,11 @@ class Benchmark(object):
                 timings[pvalues] = times
             else:
                 timings = times
-        return {'name': name, 'timings': timings}
+        return {'name': name,
+                'description': description,
+                'params': params,
+                'repeats': repeats,
+                'warmups': warmups,
+                'average': average.__name__,
+                'method': method.__name__,
+                'timings': timings}
