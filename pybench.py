@@ -4,8 +4,14 @@ except ImportError:
     from ordereddict import OrderedDict
 from collections import defaultdict
 from contextlib import contextmanager
+from inspect import getfile
 from itertools import product
+from os import path, makedirs
 import time
+
+import matplotlib as mpl
+mpl.use("Agg")
+import pylab
 
 
 class Benchmark(object):
@@ -64,3 +70,39 @@ class Benchmark(object):
                        'method': method.__name__,
                        'timings': timings}
         return self.result
+
+    def plot(self, xaxis, **kwargs):
+        result = kwargs.pop('result', self.result)
+        figname = kwargs.pop('figname', self.__class__.__name__)
+        params = kwargs.pop('params', self.params)
+        legend_pos = kwargs.pop('legend_pos', 'best')
+        ylabel = kwargs.pop('ylabel', 'time [sec]')
+        regions = kwargs.pop('regions', self.regions.keys())
+        title = kwargs.pop('title', self.__class__.__name__)
+        format = kwargs.pop('format', 'svg')
+        plotdir = kwargs.pop('plotdir', path.join(path.dirname(getfile(self.__class__)), 'results'))
+        if not path.exists(plotdir):
+            makedirs(plotdir)
+
+        pnames = [p for p in params.keys() if p != xaxis]
+        idx = params.keys().index(xaxis)
+        xvals = params[xaxis]
+        for pv in product(*[params[p] for p in pnames]):
+            figname += '_' + '_'.join('%s%s' % (k, v) for k, v in zip(pnames, pv))
+            title += ', ' + ', '.join('%s=%s' % (k, v) for k, v in zip(pnames, pv))
+            fig = pylab.figure(figname, figsize=(8, 6), dpi=300)
+            for r in regions:
+                yvals = [result['timings'][pv[:idx] + (v,) + pv[idx:]][r] for v in xvals]
+                pylab.plot(xvals, yvals, label=r)
+            pylab.legend(loc=legend_pos)
+            pylab.xlabel(xaxis)
+            pylab.ylabel(ylabel)
+            pylab.title(title)
+            pylab.grid()
+            if not format:
+                pylab.show()
+            else:
+                for fmt in format.split(','):
+                    pylab.savefig(path.join(plotdir, '%s.%s' % (figname, fmt)),
+                                  orientation='landscape', format=fmt, transparent=True)
+            pylab.close(fig)
