@@ -97,6 +97,7 @@ class Benchmark(object):
         self.result = {'name': self.name,
                        'description': self.description,
                        'params': self.params}
+        plotstyle = {}
         timings = defaultdict(dict)
         regions = set()
         for name, pref in files.items():
@@ -105,11 +106,14 @@ class Benchmark(object):
             else:
                 filename = name
             with open(filename) as f:
-                times = eval(f.read())['timings']
-                for k, v in times.items():
+                result = eval(f.read())
+                for k, v in result['plotstyle'].items():
+                    plotstyle[pref + ' ' + k] = v
+                for k, v in result['timings'].items():
                     for r, t in v.items():
                         timings[k][pref + ' ' + r] = t
                         regions.add(pref + ' ' + r)
+        self.result['plotstyle'] = plotstyle
         self.result['timings'] = timings
         self.result['regions'] = list(regions)
 
