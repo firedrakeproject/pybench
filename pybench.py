@@ -85,6 +85,11 @@ class Benchmark(object):
                 pprint(self.result, f)
         return self.result
 
+    def load(self, filename=None):
+        filename = filename or path.join(self.resultsdir, self.name + '.dat')
+        with open(filename) as f:
+            self.result = eval(f.read())
+
     def plot(self, xaxis, **kwargs):
         timings = kwargs.pop('timings', self.result['timings'])
         figname = kwargs.pop('figname', self.__class__.__name__)
