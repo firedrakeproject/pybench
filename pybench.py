@@ -22,6 +22,7 @@ class Benchmark(object):
     average = min
     method = 'test'
     timer = time.time
+    save = True
 
     def __init__(self, **kwargs):
         self.resultsdir = path.join(path.dirname(getfile(self.__class__)), 'results')
@@ -76,6 +77,9 @@ class Benchmark(object):
                        'average': average.__name__,
                        'method': method.__name__,
                        'timings': timings}
+        if self.save:
+            with open(path.join(self.resultsdir, name + '.dat'), 'w') as f:
+                f.write(str(self.result))
         return self.result
 
     def plot(self, xaxis, **kwargs):
