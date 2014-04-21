@@ -55,11 +55,12 @@ class Benchmark(object):
                 timings[pvalues] = times
             else:
                 timings = times
-        return {'name': name,
-                'description': description,
-                'params': params,
-                'repeats': repeats,
-                'warmups': warmups,
-                'average': average.__name__,
-                'method': method.__name__,
-                'timings': timings}
+        self.result = {'name': name,
+                       'description': description,
+                       'params': params,
+                       'repeats': repeats,
+                       'warmups': warmups,
+                       'average': average.__name__,
+                       'method': method.__name__,
+                       'timings': timings}
+        return self.result
