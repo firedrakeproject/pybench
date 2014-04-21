@@ -9,12 +9,12 @@ import time
 
 
 class Benchmark(object):
+    """An abstract base class for benchmarks."""
     params = {}
     repeats = 3
     warmups = 1
     average = min
     method = 'test'
-    name = 'Benchmark'
     timer = time.time
 
     @contextmanager
@@ -28,8 +28,8 @@ class Benchmark(object):
         repeats = kwargs.pop('repeats', self.repeats)
         warmups = kwargs.pop('warmups', self.warmups)
         average = kwargs.pop('average', self.average)
+        name = kwargs.pop('name', self.__class__.__name__)
         method = kwargs.pop('method', self.method)
-        name = kwargs.pop('name', self.name)
         if isinstance(method, str):
             method = getattr(self, method)
 
