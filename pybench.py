@@ -27,6 +27,8 @@ class Benchmark(object):
 
     def __init__(self, **kwargs):
         self.resultsdir = path.join(path.dirname(getfile(self.__class__)), 'results')
+        self.name = self.__class__.__name__
+        self.description = self.__doc__
         for k, v in kwargs:
             setattr(self, k, v)
         if not path.exists(self.resultsdir):
@@ -39,8 +41,8 @@ class Benchmark(object):
         self.regions[name] += self.timer() - t_
 
     def run(self, **kwargs):
-        name = kwargs.pop('name', self.__class__.__name__)
-        description = kwargs.pop('description', self.__doc__)
+        name = kwargs.pop('name', self.name)
+        description = kwargs.pop('description', self.description)
         params = kwargs.pop('params', self.params)
         repeats = kwargs.pop('repeats', self.repeats)
         warmups = kwargs.pop('warmups', self.warmups)
