@@ -24,6 +24,7 @@ class Benchmark(object):
     method = 'test'
     timer = time.time
     save = True
+    plotstyle = {}
 
     def __init__(self, **kwargs):
         self.resultsdir = path.join(path.dirname(getfile(self.__class__)), 'results')
@@ -80,6 +81,7 @@ class Benchmark(object):
                        'average': average.__name__,
                        'method': method.__name__,
                        'regions': self.regions.keys(),
+                       'plotstyle': self.plotstyle,
                        'timings': timings}
         if self.save:
             with open(path.join(self.resultsdir, name + '.dat'), 'w') as f:
@@ -121,6 +123,7 @@ class Benchmark(object):
         title = kwargs.pop('title', self.name)
         format = kwargs.pop('format', 'svg')
         plotdir = kwargs.pop('plotdir', self.resultsdir)
+        plotstyle = kwargs.pop('plotstyle', self.result['plotstyle'])
         if not path.exists(plotdir):
             makedirs(plotdir)
 
@@ -133,7 +136,7 @@ class Benchmark(object):
             fig = pylab.figure(figname + '_' + fsuff, figsize=(8, 6), dpi=300)
             for r in regions:
                 yvals = [timings[pv[:idx] + (v,) + pv[idx:]][r] for v in xvals]
-                pylab.plot(xvals, yvals, label=r)
+                pylab.plot(xvals, yvals, label=r, **plotstyle.get(r, {}))
             pylab.legend(loc=legend_pos)
             pylab.xlabel(xaxis)
             pylab.ylabel(ylabel)
