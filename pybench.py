@@ -33,6 +33,7 @@ class Benchmark(object):
             setattr(self, k, v)
         if not path.exists(self.resultsdir):
             makedirs(self.resultsdir)
+        self.regions = defaultdict(float)
 
     @contextmanager
     def timed_region(self, name):
@@ -52,7 +53,6 @@ class Benchmark(object):
             method = getattr(self, method)
 
         timings = {}
-        self.regions = defaultdict(float)
         for pvalues in product(*params.values()):
             kargs = OrderedDict(zip(params.keys(), pvalues))
 
