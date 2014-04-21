@@ -7,6 +7,7 @@ from contextlib import contextmanager
 from inspect import getfile
 from itertools import product
 from os import path, makedirs
+from pprint import pprint
 import time
 
 import matplotlib as mpl
@@ -79,7 +80,7 @@ class Benchmark(object):
                        'timings': timings}
         if self.save:
             with open(path.join(self.resultsdir, name + '.dat'), 'w') as f:
-                f.write(str(self.result))
+                pprint(self.result, f)
         return self.result
 
     def plot(self, xaxis, **kwargs):
