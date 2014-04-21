@@ -108,21 +108,21 @@ class Benchmark(object):
         idx = params.keys().index(xaxis)
         xvals = params[xaxis]
         for pv in product(*[params[p] for p in pnames]):
-            figname += '_' + '_'.join('%s%s' % (k, v) for k, v in zip(pnames, pv))
-            title += ', ' + ', '.join('%s=%s' % (k, v) for k, v in zip(pnames, pv))
-            fig = pylab.figure(figname, figsize=(8, 6), dpi=300)
+            fsuff = '_'.join('%s%s' % (k, v) for k, v in zip(pnames, pv))
+            tsuff = ', '.join('%s=%s' % (k, v) for k, v in zip(pnames, pv))
+            fig = pylab.figure(figname + '_' + fsuff, figsize=(8, 6), dpi=300)
             for r in regions:
                 yvals = [timings[pv[:idx] + (v,) + pv[idx:]][r] for v in xvals]
                 pylab.plot(xvals, yvals, label=r)
             pylab.legend(loc=legend_pos)
             pylab.xlabel(xaxis)
             pylab.ylabel(ylabel)
-            pylab.title(title)
+            pylab.title(title + ': ' + tsuff)
             pylab.grid()
             if not format:
                 pylab.show()
             else:
                 for fmt in format.split(','):
-                    pylab.savefig(path.join(plotdir, '%s.%s' % (figname, fmt)),
+                    pylab.savefig(path.join(plotdir, '%s_%s.%s' % (figname, fsuff, fmt)),
                                   orientation='landscape', format=fmt, transparent=True)
             pylab.close(fig)
