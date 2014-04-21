@@ -72,7 +72,7 @@ class Benchmark(object):
         return self.result
 
     def plot(self, xaxis, **kwargs):
-        result = kwargs.pop('result', self.result)
+        timings = kwargs.pop('timings', self.result['timings'])
         figname = kwargs.pop('figname', self.__class__.__name__)
         params = kwargs.pop('params', self.params)
         legend_pos = kwargs.pop('legend_pos', 'best')
@@ -92,7 +92,7 @@ class Benchmark(object):
             title += ', ' + ', '.join('%s=%s' % (k, v) for k, v in zip(pnames, pv))
             fig = pylab.figure(figname, figsize=(8, 6), dpi=300)
             for r in regions:
-                yvals = [result['timings'][pv[:idx] + (v,) + pv[idx:]][r] for v in xvals]
+                yvals = [timings[pv[:idx] + (v,) + pv[idx:]][r] for v in xvals]
                 pylab.plot(xvals, yvals, label=r)
             pylab.legend(loc=legend_pos)
             pylab.xlabel(xaxis)
