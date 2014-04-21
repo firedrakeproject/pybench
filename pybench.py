@@ -91,6 +91,26 @@ class Benchmark(object):
         with open(filename) as f:
             self.result = eval(f.read())
 
+    def combine(self, files):
+        self.result = {'name': self.name,
+                       'description': self.description,
+                       'params': self.params}
+        timings = defaultdict(dict)
+        regions = set()
+        for name, pref in files.items():
+            if path.exists(path.join(self.resultsdir, name + '.dat')):
+                filename = path.join(self.resultsdir, name + '.dat')
+            else:
+                filename = name
+            with open(filename) as f:
+                times = eval(f.read())['timings']
+                for k, v in times.items():
+                    for r, t in v.items():
+                        timings[k][pref + ' ' + r] = t
+                        regions.add(pref + ' ' + r)
+        self.result['timings'] = timings
+        self.result['regions'] = list(regions)
+
     def plot(self, xaxis, **kwargs):
         timings = kwargs.pop('timings', self.result['timings'])
         figname = kwargs.pop('figname', self.name)
