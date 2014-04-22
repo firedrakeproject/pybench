@@ -26,7 +26,7 @@ class Benchmark(object):
     method = 'test'
     timer = time.time
     plotstyle = {}
-    profilegraph = None
+    profilegraph = {}
 
     def __init__(self, **kwargs):
         self.basedir = path.dirname(getfile(self.__class__))
@@ -69,10 +69,12 @@ class Benchmark(object):
             statfile = '%s_%s.pstats' % (out, suff)
             pr.dump_stats(statfile)
             if profilegraph:
-                for fmt in profilegraph.split(','):
+                n = profilegraph.get('node_threshold', 1.0)
+                e = profilegraph.get('edge_threshold', 0.2)
+                for fmt in profilegraph['format'].split(','):
                     graph = '%s_%s.%s' % (out, suff, fmt)
-                    cmd = 'gprof2dot -f pstats -n 2 %s | dot -T%s -o %s'
-                    call(cmd % (statfile, fmt, graph), shell=True)
+                    cmd = 'gprof2dot -f pstats -n %s -e %s %s | dot -T%s -o %s'
+                    call(cmd % (n, e, statfile, fmt, graph), shell=True)
 
     def run(self, **kwargs):
         name, params, method = self._args(kwargs)
