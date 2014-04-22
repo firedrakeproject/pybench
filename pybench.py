@@ -96,9 +96,9 @@ class Benchmark(object):
         return self.result
 
     def combine(self, files):
-        self.result = {'name': self.name,
-                       'description': self.description,
-                       'params': self.params}
+        result = {'name': self.name,
+                  'description': self.description,
+                  'params': self.params}
         plotstyle = {}
         timings = defaultdict(dict)
         regions = set()
@@ -108,16 +108,18 @@ class Benchmark(object):
             else:
                 filename = name
             with open(filename) as f:
-                result = eval(f.read())
-                for k, v in result['plotstyle'].items():
+                res = eval(f.read())
+                for k, v in res['plotstyle'].items():
                     plotstyle[pref + ' ' + k] = v
-                for k, v in result['timings'].items():
+                for k, v in res['timings'].items():
                     for r, t in v.items():
                         timings[k][pref + ' ' + r] = t
                         regions.add(pref + ' ' + r)
-        self.result['plotstyle'] = plotstyle
-        self.result['timings'] = timings
-        self.result['regions'] = list(regions)
+        result['plotstyle'] = plotstyle
+        result['timings'] = timings
+        result['regions'] = list(regions)
+        self.result = result
+        return result
 
     def plot(self, xaxis, **kwargs):
         timings = kwargs.pop('timings', self.result['timings'])
