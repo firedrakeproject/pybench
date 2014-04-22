@@ -39,3 +39,15 @@ def test_save_load(tmpdir):
     result = b.run()
     b.save(d)
     TimedRegion().load(d) == result
+
+
+def test_combine(tmpdir):
+    b = TimedRegion()
+    da = tmpdir.join('a').strpath
+    db = tmpdir.join('b').strpath
+    keys = b.run()['timings'].keys()
+    b.save(da)
+    b.save(db)
+    result = TimedRegion().combine({da: 'a', db: 'b'})
+    assert all('a ' + k in result['timings'] for k in keys)
+    assert all('b ' + k in result['timings'] for k in keys)
