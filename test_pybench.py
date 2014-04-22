@@ -3,20 +3,18 @@ from time import sleep
 from pybench import Benchmark
 
 
+class TimedRegion(Benchmark):
+    def test(self):
+        with self.timed_region('stuff'):
+            pass
+
+
 def test_no_params():
     assert Benchmark().run(method=lambda: None)['timings']['total'] > 0.0
 
 
 def test_no_repeats():
     assert not Benchmark().run(method=lambda: None, repeats=0)['timings']
-
-
-def test_method():
-    class Foo(Benchmark):
-        def test(self):
-            pass
-
-    assert Foo().run()['timings']['total'] > 0.0
 
 
 def test_sleep():
@@ -30,10 +28,6 @@ def test_sleep():
 
 
 def test_timed_region():
-    class Foo(Benchmark):
-        def test(self):
-            with self.timed_region('stuff'):
-                pass
-
-    assert Foo().run()['timings']['total'] > 0.0
-    assert Foo().run()['timings']['stuff'] > 0.0
+    result = TimedRegion().run()
+    assert result['timings']['total'] > 0.0
+    assert result['timings']['stuff'] > 0.0
