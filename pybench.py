@@ -41,6 +41,8 @@ class Benchmark(object):
             makedirs(self.profiledir)
         if not path.exists(self.resultsdir):
             makedirs(self.resultsdir)
+        if isinstance(self.method, str):
+            self.method = getattr(self, self.method, self.method)
         self.regions = defaultdict(float)
 
     @contextmanager
