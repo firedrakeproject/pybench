@@ -23,7 +23,6 @@ class Benchmark(object):
     average = min
     method = 'test'
     timer = time.time
-    save = True
     plotstyle = {}
 
     def __init__(self, **kwargs):
@@ -83,10 +82,12 @@ class Benchmark(object):
                        'regions': self.regions.keys(),
                        'plotstyle': self.plotstyle,
                        'timings': timings}
-        if self.save:
-            with open(path.join(self.resultsdir, name + '.dat'), 'w') as f:
-                pprint(self.result, f)
         return self.result
+
+    def save(self, filename=None):
+        filename = filename or path.join(self.resultsdir, self.name + '.dat')
+        with open(filename, 'w') as f:
+            pprint(self.result, f)
 
     def load(self, filename=None):
         filename = filename or path.join(self.resultsdir, self.name + '.dat')
