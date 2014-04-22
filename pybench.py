@@ -2,6 +2,7 @@ try:
     from collections import OrderedDict
 except ImportError:
     from ordereddict import OrderedDict
+from argparse import ArgumentParser
 from collections import defaultdict
 from contextlib import contextmanager
 from cProfile import Profile
@@ -55,6 +56,23 @@ class Benchmark(object):
         if isinstance(method, str):
             method = getattr(self, method)
         return name, params, method
+
+    def parser(self, **kwargs):
+        msg = ' (uses the default file name if no file is given)'
+        p = ArgumentParser(description=self.description)
+        p.add_argument('-r', '--run', action='store_true',
+                       help='run the method with default arguments')
+        p.add_argument('-b', '--benchmark', action='store_true',
+                       help='run the benchmark')
+        p.add_argument('-s', '--save', nargs='?', metavar='file',
+                       default=False, help='save results to file' + msg)
+        p.add_argument('-l', '--load', nargs='?', metavar='file',
+                       default=False, help='load results from file' + msg)
+        p.add_argument('-p', '--plot', type=str, nargs='+', metavar='xaxis',
+                       help='Plot results with given parameter on the x-axis')
+        p.add_argument('--profile', action='store_true',
+                       help='Create a cProfile')
+        return p
 
     def profile(self, **kwargs):
         name, params, method = self._args(kwargs)
