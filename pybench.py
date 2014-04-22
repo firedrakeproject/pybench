@@ -93,6 +93,7 @@ class Benchmark(object):
         filename = filename or path.join(self.resultsdir, self.name + '.dat')
         with open(filename) as f:
             self.result = eval(f.read())
+        return self.result
 
     def combine(self, files):
         self.result = {'name': self.name,
