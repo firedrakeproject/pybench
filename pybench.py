@@ -8,6 +8,7 @@ from contextlib import contextmanager
 from cProfile import Profile
 from inspect import getfile
 from itertools import product
+import json
 from os import path, makedirs
 from pprint import pprint
 from subprocess import call
@@ -79,6 +80,9 @@ class Benchmark(object):
         p.add_argument('-l', '--load', nargs='?', metavar='file',
                        default=kwargs.get('load', False),
                        help='load results from file' + msg)
+        p.add_argument('-c', '--combine', nargs=1, type=json.loads,
+                       metavar='dictionary', default=kwargs.get('combine'),
+                       help='combine several results (expects a dictionary of result file name / prefix pairs)')
         p.add_argument('-p', '--plot', type=str, nargs='+', metavar='xaxis',
                        default=kwargs.get('plot'),
                        help='Plot results with given parameter on the x-axis')
@@ -97,6 +101,8 @@ class Benchmark(object):
             self.save(args.save)
         if args.load or args.load is None:
             self.load(args.load)
+        if args.combine:
+            self.combine(args.combine)
         if args.plot:
             for xaxis in args.plot:
                 self.plot(xaxis)
