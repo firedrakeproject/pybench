@@ -1,3 +1,4 @@
+from itertools import product
 from time import sleep
 
 from pybench import Benchmark
@@ -7,6 +8,13 @@ class TimedRegion(Benchmark):
     def test(self):
         with self.timed_region('stuff'):
             pass
+
+
+class Parametrized(Benchmark):
+    params = {'a': range(3), 'b': range(3)}
+
+    def test(self, a=None, b=None):
+        pass
 
 
 def test_no_params():
@@ -51,3 +59,9 @@ def test_combine(tmpdir):
     result = TimedRegion().combine({da: 'a', db: 'b'})
     assert all('a ' + k in result['timings'] for k in keys)
     assert all('b ' + k in result['timings'] for k in keys)
+
+
+def test_parametrized():
+    result = Parametrized().run()
+    assert all(result['timings'][p]['total'] > 0.0
+               for p in product(*result['params'].values()))
