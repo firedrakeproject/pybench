@@ -59,18 +59,29 @@ class Benchmark(object):
 
     def parser(self, **kwargs):
         msg = ' (uses the default file name if no file is given)'
-        p = ArgumentParser(description=self.description)
+        if kwargs:
+            epilog = 'The following defaults are used if not overridden:'
+            epilog = '\n'.join([epilog, str(kwargs)])
+        else:
+            epilog = None
+        p = ArgumentParser(description=self.description, epilog=epilog)
         p.add_argument('-r', '--run', action='store_true',
+                       default=kwargs.get('run', False),
                        help='run the method with default arguments')
         p.add_argument('-b', '--benchmark', action='store_true',
+                       default=kwargs.get('benchmark', False),
                        help='run the benchmark')
         p.add_argument('-s', '--save', nargs='?', metavar='file',
-                       default=False, help='save results to file' + msg)
+                       default=kwargs.get('save', False),
+                       help='save results to file' + msg)
         p.add_argument('-l', '--load', nargs='?', metavar='file',
-                       default=False, help='load results from file' + msg)
+                       default=kwargs.get('load', False),
+                       help='load results from file' + msg)
         p.add_argument('-p', '--plot', type=str, nargs='+', metavar='xaxis',
+                       default=kwargs.get('plot'),
                        help='Plot results with given parameter on the x-axis')
         p.add_argument('--profile', action='store_true',
+                       default=kwargs.get('profile', False),
                        help='Create a cProfile')
         return p
 
