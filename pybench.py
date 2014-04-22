@@ -85,6 +85,22 @@ class Benchmark(object):
                        help='Create a cProfile')
         return p
 
+    def main(self, **kwargs):
+        args = self.parser(**kwargs).parse_args()
+        if args.run:
+            self.method()
+        if args.benchmark:
+            self.run()
+        if args.save or args.save is None:
+            self.save(args.save)
+        if args.load or args.load is None:
+            self.load(args.load)
+        if args.plot:
+            for xaxis in args.plot:
+                self.plot(xaxis)
+        if args.profile:
+            self.profile()
+
     def profile(self, **kwargs):
         name, params, method = self._args(kwargs)
         profiledir = kwargs.pop('profiledir', self.profiledir)
