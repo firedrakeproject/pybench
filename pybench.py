@@ -112,9 +112,15 @@ class Benchmark(object):
                 for k, v in res['plotstyle'].items():
                     plotstyle[pref + ' ' + k] = v
                 for k, v in res['timings'].items():
-                    for r, t in v.items():
-                        timings[k][pref + ' ' + r] = t
-                        regions.add(pref + ' ' + r)
+                    # Parametrized benchmark
+                    if isinstance(v, dict):
+                        for r, t in v.items():
+                            timings[k][pref + ' ' + r] = t
+                            regions.add(pref + ' ' + r)
+                    # Non-parametrized benchmark
+                    else:
+                        timings[pref + ' ' + k] = v
+                        regions.add(pref + ' ' + k)
         result['plotstyle'] = plotstyle
         result['timings'] = timings
         result['regions'] = list(regions)
