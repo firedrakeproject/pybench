@@ -9,6 +9,7 @@ from inspect import getfile
 from itertools import product
 from os import path, makedirs
 from pprint import pprint
+from subprocess import call
 import time
 
 import matplotlib as mpl
@@ -25,6 +26,7 @@ class Benchmark(object):
     method = 'test'
     timer = time.time
     plotstyle = {}
+    profilegraph = None
 
     def __init__(self, **kwargs):
         self.basedir = path.dirname(getfile(self.__class__))
@@ -57,13 +59,20 @@ class Benchmark(object):
     def profile(self, **kwargs):
         name, params, method = self._args(kwargs)
         profiledir = kwargs.pop('profiledir', self.profiledir)
+        profilegraph = kwargs.pop('profilegraph', self.profilegraph)
         out = path.join(profiledir, name)
         for pvalues in product(*params.values()):
             kargs = OrderedDict(zip(params.keys(), pvalues))
             suff = '_'.join('%s%s' % (k, v) for k, v in kargs.items())
             pr = Profile()
             pr.runcall(method, **kargs)
-            pr.dump_stats('%s_%s.pstats' % (out, suff))
+            statfile = '%s_%s.pstats' % (out, suff)
+            pr.dump_stats(statfile)
+            if profilegraph:
+                for fmt in profilegraph.split(','):
+                    graph = '%s_%s.%s' % (out, suff, fmt)
+                    cmd = 'gprof2dot -f pstats -n 2 %s | dot -T%s -o %s'
+                    call(cmd % (statfile, fmt, graph), shell=True)
 
     def run(self, **kwargs):
         name, params, method = self._args(kwargs)
