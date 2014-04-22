@@ -4,6 +4,7 @@ except ImportError:
     from ordereddict import OrderedDict
 from collections import defaultdict
 from contextlib import contextmanager
+from cProfile import Profile
 from inspect import getfile
 from itertools import product
 from os import path, makedirs
@@ -26,11 +27,15 @@ class Benchmark(object):
     plotstyle = {}
 
     def __init__(self, **kwargs):
-        self.resultsdir = path.join(path.dirname(getfile(self.__class__)), 'results')
+        self.basedir = path.dirname(getfile(self.__class__))
+        self.profiledir = path.join(self.basedir, 'profiles')
+        self.resultsdir = path.join(self.basedir, 'results')
         self.name = self.__class__.__name__
         self.description = self.__doc__
         for k, v in kwargs:
             setattr(self, k, v)
+        if not path.exists(self.profiledir):
+            makedirs(self.profiledir)
         if not path.exists(self.resultsdir):
             makedirs(self.resultsdir)
         self.regions = defaultdict(float)
@@ -41,16 +46,31 @@ class Benchmark(object):
         yield
         self.regions[name] += self.timer() - t_
 
-    def run(self, **kwargs):
+    def _args(self, kwargs):
         name = kwargs.pop('name', self.name)
-        description = kwargs.pop('description', self.description)
         params = kwargs.pop('params', self.params)
-        repeats = kwargs.pop('repeats', self.repeats)
-        warmups = kwargs.pop('warmups', self.warmups)
-        average = kwargs.pop('average', self.average)
         method = kwargs.pop('method', self.method)
         if isinstance(method, str):
             method = getattr(self, method)
+        return name, params, method
+
+    def profile(self, **kwargs):
+        name, params, method = self._args(kwargs)
+        profiledir = kwargs.pop('profiledir', self.profiledir)
+        out = path.join(profiledir, name)
+        for pvalues in product(*params.values()):
+            kargs = OrderedDict(zip(params.keys(), pvalues))
+            suff = '_'.join('%s%s' % (k, v) for k, v in kargs.items())
+            pr = Profile()
+            pr.runcall(method, **kargs)
+            pr.dump_stats('%s_%s.pstats' % (out, suff))
+
+    def run(self, **kwargs):
+        name, params, method = self._args(kwargs)
+        description = kwargs.pop('description', self.description)
+        repeats = kwargs.pop('repeats', self.repeats)
+        warmups = kwargs.pop('warmups', self.warmups)
+        average = kwargs.pop('average', self.average)
 
         timings = {}
         for pvalues in product(*params.values()):
