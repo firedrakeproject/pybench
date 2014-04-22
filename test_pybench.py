@@ -49,7 +49,7 @@ def test_save_load(tmpdir):
     TimedRegion().load(d) == result
 
 
-def test_combine(tmpdir):
+def test_combine_regions(tmpdir):
     b = TimedRegion()
     da = tmpdir.join('a').strpath
     db = tmpdir.join('b').strpath
@@ -65,3 +65,15 @@ def test_parametrized():
     result = Parametrized().run()
     assert all(result['timings'][p]['total'] > 0.0
                for p in product(*result['params'].values()))
+
+
+def test_combine_parametrized(tmpdir):
+    b = Parametrized()
+    da = tmpdir.join('a').strpath
+    db = tmpdir.join('b').strpath
+    params = b.run()['timings'].keys()
+    b.save(da)
+    b.save(db)
+    result = Parametrized().combine({da: 'a', db: 'b'})
+    assert all('a total' in result['timings'][p] for p in params)
+    assert all('b total' in result['timings'][p] for p in params)
