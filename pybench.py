@@ -185,11 +185,7 @@ class Benchmark(object):
         return self.result
 
     def combine(self, files):
-        result = {'name': self.name,
-                  'description': self.description,
-                  'meta': self.meta,
-                  'series': self.series,
-                  'params': self.params}
+        result = {'name': self.name, 'series': self.series}
         plotstyle = {}
         timings = defaultdict(dict)
         regions = set()
@@ -200,6 +196,8 @@ class Benchmark(object):
                 filename = name
             with open(filename) as f:
                 res = eval(f.read())
+                for key in ['description', 'meta', 'params']:
+                    result[key] = res[key]
                 for k, v in res['plotstyle'].items():
                     plotstyle[pref + ' ' + k] = v
                 for k, v in res['timings'].items():
