@@ -47,12 +47,17 @@ class Benchmark(object):
         if isinstance(self.method, str):
             self.method = getattr(self, self.method, self.method)
         self.regions = defaultdict(float)
+        self.profiles = {}
 
     @contextmanager
     def timed_region(self, name):
+        if name in self.profiles:
+            self.profiles[name].enable()
         t_ = self.timer()
         yield
         self.regions[name] += self.timer() - t_
+        if name in self.profiles:
+            self.profiles[name].disable()
 
     def _args(self, kwargs):
         name = kwargs.pop('name', self.name)
@@ -115,22 +120,27 @@ class Benchmark(object):
         name, params, method = self._args(kwargs)
         profiledir = kwargs.pop('profiledir', self.profiledir)
         profilegraph = kwargs.pop('profilegraph', self.profilegraph)
+        n = profilegraph.get('node_threshold', 1.0)
+        e = profilegraph.get('edge_threshold', 0.2)
+        formats = profilegraph['format'].split(',') if profilegraph else []
+        regions = kwargs.pop('regions', ['total'])
         out = path.join(profiledir, name)
         pkeys, pvals = zip(*params)
         for pvalues in product(*pvals):
             kargs = dict(zip(pkeys, pvalues))
             suff = '_'.join('%s%s' % (k, v) for k, v in kargs.items())
-            pr = Profile()
-            pr.runcall(method, **kargs)
-            statfile = '%s_%s.pstats' % (out, suff)
-            pr.dump_stats(statfile)
-            if profilegraph:
-                n = profilegraph.get('node_threshold', 1.0)
-                e = profilegraph.get('edge_threshold', 0.2)
-                for fmt in profilegraph['format'].split(','):
-                    graph = '%s_%s.%s' % (out, suff, fmt)
-                    cmd = 'gprof2dot -f pstats -n %s -e %s %s | dot -T%s -o %s'
-                    call(cmd % (n, e, statfile, fmt, graph), shell=True)
+            for r in regions:
+                self.profiles[r] = Profile()
+            if 'total' in regions:
+                self.profiles['total'].runcall(method, **kargs)
+            else:
+                method(**kargs)
+            for r in regions:
+                statfile = '%s_%s_%s' % (out, suff, r.replace(' ', ''))
+                self.profiles[r].dump_stats(statfile + '.pstats')
+                for fmt in formats:
+                    cmd = 'gprof2dot -f pstats -n %s -e %s %s.pstats | dot -T%s -o %s.%s'
+                    call(cmd % (n, e, statfile, fmt, statfile, fmt), shell=True)
 
     def run(self, **kwargs):
         name, params, method = self._args(kwargs)
