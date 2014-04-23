@@ -11,7 +11,7 @@ class TimedRegion(Benchmark):
 
 
 class Parametrized(Benchmark):
-    params = {'a': range(3), 'b': range(3)}
+    params = [('a', range(3)), ('b', range(3))]
 
     def test(self, a=None, b=None):
         pass
@@ -30,7 +30,8 @@ def test_sleep():
         for _ in range(n):
             sleep(duration)
     times = Benchmark().run(method=myfunc,
-                            params={'n': range(3), 'duration': (0.001, 0.002)})
+                            params=[('n', range(3)),
+                                    ('duration', (0.001, 0.002))])
     for (n, d), t in times['timings'].items():
         assert abs(n*d - t['total']) < 1e-3
 
@@ -63,8 +64,9 @@ def test_combine_regions(tmpdir):
 
 def test_parametrized():
     result = Parametrized().run()
+    _, pvalues = zip(*result['params'])
     assert all(result['timings'][p]['total'] > 0.0
-               for p in product(*result['params'].values()))
+               for p in product(*pvalues))
 
 
 def test_combine_parametrized(tmpdir):

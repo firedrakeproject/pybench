@@ -139,7 +139,10 @@ class Benchmark(object):
         average = kwargs.pop('average', self.average)
 
         timings = {}
-        pkeys, pvals = zip(*params)
+        if params:
+            pkeys, pvals = zip(*params)
+        else:
+            pkeys, pvals = (), ()
         for pvalues in product(*pvals):
             kargs = dict(zip(pkeys, pvalues))
 
