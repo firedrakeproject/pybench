@@ -239,8 +239,8 @@ class Benchmark(object):
 
     def plot(self, xaxis, **kwargs):
         timings = kwargs.pop('timings', self.result['timings'])
-        figname = kwargs.pop('figname', self.name)
-        params = kwargs.pop('params', self.params)
+        figname = kwargs.pop('figname', self.result['name'])
+        params = kwargs.pop('params', self.result['params'])
         legend_pos = kwargs.pop('legend_pos', 'best')
         ylabel = kwargs.pop('ylabel', 'time [sec]')
         regions = kwargs.pop('regions', self.result['regions'])
