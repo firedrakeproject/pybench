@@ -26,12 +26,16 @@ class Benchmark(object):
     plotstyle = {}
     profilegraph = {}
     meta = {}
+    series = {}
 
     def __init__(self, **kwargs):
         self.basedir = path.dirname(getfile(self.__class__))
         self.profiledir = path.join(self.basedir, 'profiles')
         self.resultsdir = path.join(self.basedir, 'results')
         self.name = self.__class__.__name__
+        if self.series:
+            suff = '_'.join('%s%s' % (k, v) for k, v in self.series.items())
+            self.name += '_' + suff
         self.description = self.__doc__
         for k, v in kwargs:
             setattr(self, k, v)
@@ -165,6 +169,7 @@ class Benchmark(object):
                        'regions': self.regions.keys(),
                        'plotstyle': self.plotstyle,
                        'meta': self.meta,
+                       'series': self.series,
                        'timings': timings}
         return self.result
 
@@ -183,6 +188,7 @@ class Benchmark(object):
         result = {'name': self.name,
                   'description': self.description,
                   'meta': self.meta,
+                  'series': self.series,
                   'params': self.params}
         plotstyle = {}
         timings = defaultdict(dict)
@@ -209,6 +215,27 @@ class Benchmark(object):
         result['plotstyle'] = plotstyle
         result['timings'] = timings
         result['regions'] = list(regions)
+        self.result = result
+        return result
+
+    def combine_series(self, series, filename=None):
+        filename = filename or self.name
+        self.params = self.params + series
+        result = {'name': self.name, 'params': self.params}
+        timings = {}
+        skeys, svals = zip(*series)
+        for svalues in product(*svals):
+            suff = '_'.join('%s%s' % (k, v) for k, v in zip(skeys, svalues))
+            fname = '%s_%s.dat' % (filename, suff)
+            if path.exists(path.join(self.resultsdir, fname)):
+                fname = path.join(self.resultsdir, fname)
+            with open(fname) as f:
+                res = eval(f.read())
+                for key in ['description', 'plotstyle', 'meta', 'regions']:
+                    result[key] = res[key]
+                for k, v in res['timings'].items():
+                    timings[k + svalues] = v
+        result['timings'] = timings
         self.result = result
         return result
 
