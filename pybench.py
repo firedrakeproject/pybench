@@ -29,6 +29,7 @@ class Benchmark(object):
     timer = time.time
     plotstyle = {}
     profilegraph = {}
+    meta = {}
 
     def __init__(self, **kwargs):
         self.basedir = path.dirname(getfile(self.__class__))
@@ -165,6 +166,7 @@ class Benchmark(object):
                        'method': method.__name__,
                        'regions': self.regions.keys(),
                        'plotstyle': self.plotstyle,
+                       'meta': self.meta,
                        'timings': timings}
         return self.result
 
@@ -182,6 +184,7 @@ class Benchmark(object):
     def combine(self, files):
         result = {'name': self.name,
                   'description': self.description,
+                  'meta': self.meta,
                   'params': self.params}
         plotstyle = {}
         timings = defaultdict(dict)
