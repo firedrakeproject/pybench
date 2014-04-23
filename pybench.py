@@ -27,6 +27,7 @@ class Benchmark(object):
     profilegraph = {}
     meta = {}
     series = {}
+    suffix = '.dat'
 
     def __init__(self, **kwargs):
         self.basedir = path.dirname(getfile(self.__class__))
@@ -176,16 +177,23 @@ class Benchmark(object):
                        'timings': timings}
         return self.result
 
-    def save(self, filename=None):
-        filename = filename or path.join(self.resultsdir, self.name + '.dat')
-        with open(filename, 'w') as f:
-            pprint(self.result, f)
+    def _file(self, filename=None):
+        filename = filename or self.name
+        if filename.endswith(self.suffix):
+            return filename
+        return path.join(self.resultsdir, filename + self.suffix)
+
+    def _read(self, filename=None):
+        with open(self._file(filename)) as f:
+            return eval(f.read())
 
     def load(self, filename=None):
-        filename = filename or path.join(self.resultsdir, self.name + '.dat')
-        with open(filename) as f:
-            self.result = eval(f.read())
+        self.result = self._read(filename)
         return self.result
+
+    def save(self, filename=None):
+        with open(self._file(filename), 'w') as f:
+            pprint(self.result, f)
 
     def combine(self, files):
         result = {'name': self.name, 'series': self.series}
@@ -193,26 +201,21 @@ class Benchmark(object):
         timings = defaultdict(dict)
         regions = set()
         for name, pref in files.items():
-            if path.exists(path.join(self.resultsdir, name + '.dat')):
-                filename = path.join(self.resultsdir, name + '.dat')
-            else:
-                filename = name
-            with open(filename) as f:
-                res = eval(f.read())
-                for key in ['description', 'meta', 'params']:
-                    result[key] = res[key]
-                for k, v in res['plotstyle'].items():
-                    plotstyle[pref + ' ' + k] = v
-                for k, v in res['timings'].items():
-                    # Parametrized benchmark
-                    if isinstance(v, dict):
-                        for r, t in v.items():
-                            timings[k][pref + ' ' + r] = t
-                            regions.add(pref + ' ' + r)
-                    # Non-parametrized benchmark
-                    else:
-                        timings[pref + ' ' + k] = v
-                        regions.add(pref + ' ' + k)
+            res = self._read(name)
+            for key in ['description', 'meta', 'params']:
+                result[key] = res[key]
+            for k, v in res['plotstyle'].items():
+                plotstyle[pref + ' ' + k] = v
+            for k, v in res['timings'].items():
+                # Parametrized benchmark
+                if isinstance(v, dict):
+                    for r, t in v.items():
+                        timings[k][pref + ' ' + r] = t
+                        regions.add(pref + ' ' + r)
+                # Non-parametrized benchmark
+                else:
+                    timings[pref + ' ' + k] = v
+                    regions.add(pref + ' ' + k)
         result['plotstyle'] = plotstyle
         result['timings'] = timings
         result['regions'] = list(regions)
@@ -227,15 +230,12 @@ class Benchmark(object):
         skeys, svals = zip(*series)
         for svalues in product(*svals):
             suff = '_'.join('%s%s' % (k, v) for k, v in zip(skeys, svalues))
-            fname = '%s_%s.dat' % (filename, suff)
-            if path.exists(path.join(self.resultsdir, fname)):
-                fname = path.join(self.resultsdir, fname)
-            with open(fname) as f:
-                res = eval(f.read())
-                for key in ['description', 'plotstyle', 'meta', 'regions']:
-                    result[key] = res[key]
-                for k, v in res['timings'].items():
-                    timings[k + svalues] = v
+            fname = '%s_%s' % (filename, suff)
+            res = self._read(fname)
+            for key in ['description', 'plotstyle', 'meta', 'regions']:
+                result[key] = res[key]
+            for k, v in res['timings'].items():
+                timings[k + svalues] = v
         result['timings'] = timings
         self.result = result
         return result
