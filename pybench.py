@@ -1,7 +1,3 @@
-try:
-    from collections import OrderedDict
-except ImportError:
-    from ordereddict import OrderedDict
 from argparse import ArgumentParser
 from collections import defaultdict
 from contextlib import contextmanager
@@ -21,7 +17,7 @@ import pylab
 
 class Benchmark(object):
     """An abstract base class for benchmarks."""
-    params = {}
+    params = []
     repeats = 3
     warmups = 1
     average = min
@@ -115,8 +111,9 @@ class Benchmark(object):
         profiledir = kwargs.pop('profiledir', self.profiledir)
         profilegraph = kwargs.pop('profilegraph', self.profilegraph)
         out = path.join(profiledir, name)
-        for pvalues in product(*params.values()):
-            kargs = OrderedDict(zip(params.keys(), pvalues))
+        pkeys, pvals = zip(*params)
+        for pvalues in product(*pvals):
+            kargs = dict(zip(pkeys, pvalues))
             suff = '_'.join('%s%s' % (k, v) for k, v in kargs.items())
             pr = Profile()
             pr.runcall(method, **kargs)
@@ -138,8 +135,9 @@ class Benchmark(object):
         average = kwargs.pop('average', self.average)
 
         timings = {}
-        for pvalues in product(*params.values()):
-            kargs = OrderedDict(zip(params.keys(), pvalues))
+        pkeys, pvals = zip(*params)
+        for pvalues in product(*pvals):
+            kargs = dict(zip(pkeys, pvalues))
 
             for _ in range(warmups):
                 method(**kargs)
@@ -228,10 +226,11 @@ class Benchmark(object):
         if not path.exists(plotdir):
             makedirs(plotdir)
 
-        pnames = [p for p in params.keys() if p != xaxis]
-        idx = params.keys().index(xaxis)
-        xvals = params[xaxis]
-        for pv in product(*[params[p] for p in pnames]):
+        pkeys, pvals = zip(*params)
+        pnames = [p for p in pkeys if p != xaxis]
+        idx = pkeys.index(xaxis)
+        xvals = pvals[idx]
+        for pv in product(*[p for p in pvals if p != xvals]):
             fsuff = '_'.join('%s%s' % (k, v) for k, v in zip(pnames, pv))
             tsuff = ', '.join('%s=%s' % (k, v) for k, v in zip(pnames, pv))
             fig = pylab.figure(figname + '_' + fsuff, figsize=(8, 6), dpi=300)
