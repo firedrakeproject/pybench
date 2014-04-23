@@ -37,7 +37,7 @@ class Benchmark(object):
             suff = '_'.join('%s%s' % (k, v) for k, v in self.series.items())
             self.name += '_' + suff
         self.description = self.__doc__
-        for k, v in kwargs:
+        for k, v in kwargs.items():
             setattr(self, k, v)
         if not path.exists(self.profiledir):
             makedirs(self.profiledir)
