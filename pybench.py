@@ -12,6 +12,9 @@ import time
 
 import matplotlib as mpl
 mpl.use("Agg")
+from matplotlib.font_manager import FontProperties
+fontP = FontProperties()
+fontP.set_size('small')
 import pylab
 
 try:
@@ -294,7 +297,7 @@ class Benchmark(object):
             box = ax.get_position()
             ax.set_position([box.x0, box.y0, box.width * 0.75, box.height])
             # Put a legend to the right of the current axis
-            ax.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+            ax.legend(loc='center left', bbox_to_anchor=(1, 0.5), prop=fontP)
             pylab.xlabel(xaxis)
             pylab.ylabel(ylabel)
             pylab.title(title + ': ' + tsuff)
