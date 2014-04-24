@@ -14,6 +14,13 @@ import matplotlib as mpl
 mpl.use("Agg")
 import pylab
 
+try:
+    from mpi4py import MPI
+    rank = MPI.COMM_WORLD.rank
+except ImportError:
+    # Assume serial
+    rank = 0
+
 
 class Benchmark(object):
     """An abstract base class for benchmarks."""
@@ -135,12 +142,13 @@ class Benchmark(object):
                 self.profiles['total'].runcall(method, **kargs)
             else:
                 method(**kargs)
-            for r in regions:
-                statfile = '%s_%s_%s' % (out, suff, r.replace(' ', ''))
-                self.profiles[r].dump_stats(statfile + '.pstats')
-                for fmt in formats:
-                    cmd = 'gprof2dot -f pstats -n %s -e %s %s.pstats | dot -T%s -o %s.%s'
-                    call(cmd % (n, e, statfile, fmt, statfile, fmt), shell=True)
+            if rank == 0:
+                for r in regions:
+                    statfile = '%s_%s_%s' % (out, suff, r.replace(' ', ''))
+                    self.profiles[r].dump_stats(statfile + '.pstats')
+                    for fmt in formats:
+                        cmd = 'gprof2dot -f pstats -n %s -e %s %s.pstats | dot -T%s -o %s.%s'
+                        call(cmd % (n, e, statfile, fmt, statfile, fmt), shell=True)
 
     def run(self, **kwargs):
         name, params, method = self._args(kwargs)
@@ -202,8 +210,9 @@ class Benchmark(object):
         return self.result
 
     def save(self, filename=None):
-        with open(self._file(filename), 'w') as f:
-            pprint(self.result, f)
+        if rank == 0:
+            with open(self._file(filename), 'w') as f:
+                pprint(self.result, f)
 
     def combine(self, files):
         result = {'name': self.name, 'series': self.series}
@@ -251,6 +260,8 @@ class Benchmark(object):
         return result
 
     def plot(self, xaxis, **kwargs):
+        if rank > 0:
+            return
         timings = kwargs.pop('timings', self.result['timings'])
         figname = kwargs.pop('figname', self.result['name'])
         params = kwargs.pop('params', self.result['params'])
