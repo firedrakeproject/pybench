@@ -269,7 +269,6 @@ class Benchmark(object):
         timings = kwargs.pop('timings', self.result['timings'])
         figname = kwargs.pop('figname', self.result['name'])
         params = kwargs.pop('params', self.result['params'])
-        legend_pos = kwargs.pop('legend_pos', 'best')
         ylabel = kwargs.pop('ylabel', 'time [sec]')
         regions = kwargs.pop('regions', self.result['regions'])
         title = kwargs.pop('title', self.name)
@@ -286,11 +285,16 @@ class Benchmark(object):
         for pv in product(*[p for p in pvals if p != xvals]):
             fsuff = '_'.join('%s%s' % (k, v) for k, v in zip(pnames, pv))
             tsuff = ', '.join('%s=%s' % (k, v) for k, v in zip(pnames, pv))
-            fig = pylab.figure(figname + '_' + fsuff, figsize=(8, 6), dpi=300)
+            fig = pylab.figure(figname + '_' + fsuff, figsize=(9, 6), dpi=300)
+            ax = pylab.subplot(111)
             for r in regions:
                 yvals = [timings[pv[:idx] + (v,) + pv[idx:]][r] for v in xvals]
-                pylab.plot(xvals, yvals, label=r, **plotstyle.get(r, {}))
-            pylab.legend(loc=legend_pos)
+                ax.plot(xvals, yvals, label=r, **plotstyle.get(r, {}))
+            # Shink current axis by 20%
+            box = ax.get_position()
+            ax.set_position([box.x0, box.y0, box.width * 0.75, box.height])
+            # Put a legend to the right of the current axis
+            ax.legend(loc='center left', bbox_to_anchor=(1, 0.5))
             pylab.xlabel(xaxis)
             pylab.ylabel(ylabel)
             pylab.title(title + ': ' + tsuff)
