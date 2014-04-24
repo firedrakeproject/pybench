@@ -134,6 +134,8 @@ class Benchmark(object):
         out = path.join(profiledir, name)
         pkeys, pvals = zip(*params)
         for pvalues in product(*pvals):
+            if rank == 0:
+                print 'Profile', name, 'for parameters', ', '.join('%s=%s' % (k, v) for k, v in zip(pkeys, pvalues))
             kargs = dict(zip(pkeys, pvalues))
             suff = '_'.join('%s%s' % (k, v) for k, v in kargs.items())
             for r in regions:
@@ -163,6 +165,8 @@ class Benchmark(object):
         else:
             pkeys, pvals = (), ()
         for pvalues in product(*pvals):
+            if rank == 0:
+                print 'Benchmark', name, 'for parameters', ', '.join('%s=%s' % (k, v) for k, v in zip(pkeys, pvalues))
             kargs = dict(zip(pkeys, pvalues))
 
             for _ in range(warmups):
