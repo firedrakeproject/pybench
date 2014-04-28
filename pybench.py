@@ -291,8 +291,11 @@ class Benchmark(object):
             fig = pylab.figure(figname + '_' + fsuff, figsize=(9, 6), dpi=300)
             ax = pylab.subplot(111)
             for r in regions:
-                yvals = [timings[pv[:idx] + (v,) + pv[idx:]][r] for v in xvals]
-                ax.plot(xvals, yvals, label=r, **plotstyle.get(r, {}))
+                try:
+                    yvals = [timings[pv[:idx] + (v,) + pv[idx:]][r] for v in xvals]
+                    ax.plot(xvals, yvals, label=r, **plotstyle.get(r, {}))
+                except KeyError:
+                    pass
             # Shink current axis by 20%
             box = ax.get_position()
             ax.set_position([box.x0, box.y0, box.width * 0.75, box.height])
