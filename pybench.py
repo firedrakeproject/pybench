@@ -41,6 +41,7 @@ class Benchmark(object):
 
     def __init__(self, **kwargs):
         self.basedir = path.dirname(getfile(self.__class__))
+        self.plotdir = path.join(self.basedir, 'plots')
         self.profiledir = path.join(self.basedir, 'profiles')
         self.resultsdir = path.join(self.basedir, 'results')
         self.name = self.__class__.__name__
@@ -50,10 +51,9 @@ class Benchmark(object):
         self.description = self.__doc__
         for k, v in kwargs.items():
             setattr(self, k, v)
-        if not path.exists(self.profiledir):
-            makedirs(self.profiledir)
-        if not path.exists(self.resultsdir):
-            makedirs(self.resultsdir)
+        for d in [self.plotdir, self.profiledir, self.resultsdir]:
+            if not path.exists(d):
+                makedirs(d)
         if isinstance(self.method, str):
             self.method = getattr(self, self.method, self.method)
         self.regions = defaultdict(float)
@@ -276,7 +276,7 @@ class Benchmark(object):
         regions = kwargs.pop('regions', self.result['regions'])
         title = kwargs.pop('title', self.name)
         format = kwargs.pop('format', 'svg')
-        plotdir = kwargs.pop('plotdir', self.resultsdir)
+        plotdir = kwargs.pop('plotdir', self.plotdir)
         plotstyle = kwargs.pop('plotstyle', self.result['plotstyle'])
         if not path.exists(plotdir):
             makedirs(plotdir)
