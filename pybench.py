@@ -2,11 +2,13 @@ from argparse import ArgumentParser
 from collections import defaultdict
 from contextlib import contextmanager
 from cProfile import Profile
+from datetime import datetime
 from inspect import getfile
 from itertools import product
 import json
 from os import path, makedirs
 from pprint import pprint
+import shutil
 from subprocess import call
 import time
 
@@ -312,3 +314,10 @@ class Benchmark(object):
                     pylab.savefig(path.join(plotdir, '%s_%s.%s' % (figname, fsuff, fmt)),
                                   orientation='landscape', format=fmt, transparent=True)
             pylab.close(fig)
+
+    def archive(self, dirname=None):
+        timestamp = datetime.now().strftime('%Y-%m-%dT%H%M%S')
+        dirname = dirname or path.join(self.basedir, timestamp)
+        makedirs(dirname)
+        for d in [self.resultsdir, self.profiledir, self.plotdir]:
+            shutil.move(d, dirname)
