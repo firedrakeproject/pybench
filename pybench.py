@@ -274,6 +274,8 @@ class Benchmark(object):
         timings = kwargs.pop('timings', self.result['timings'])
         figname = kwargs.pop('figname', self.result['name'])
         params = kwargs.pop('params', self.result['params'])
+        xlabel = kwargs.pop('xlabel', xaxis)
+        xvalues = kwargs.pop('xvalues', None)
         ylabel = kwargs.pop('ylabel', 'time [sec]')
         regions = kwargs.pop('regions', self.result['regions'])
         title = kwargs.pop('title', self.name)
@@ -295,7 +297,7 @@ class Benchmark(object):
             for r in regions:
                 try:
                     yvals = [timings[pv[:idx] + (v,) + pv[idx:]][r] for v in xvals]
-                    ax.plot(xvals, yvals, label=r, **plotstyle.get(r, {}))
+                    ax.plot(xvalues or xvals, yvals, label=r, **plotstyle.get(r, {}))
                 except KeyError:
                     pass
             # Shink current axis by 20%
@@ -303,7 +305,7 @@ class Benchmark(object):
             ax.set_position([box.x0, box.y0, box.width * 0.75, box.height])
             # Put a legend to the right of the current axis
             ax.legend(loc='center left', bbox_to_anchor=(1, 0.5), prop=fontP)
-            pylab.xlabel(xaxis)
+            pylab.xlabel(xlabel)
             pylab.ylabel(ylabel)
             pylab.title(title + ': ' + tsuff)
             pylab.grid()
