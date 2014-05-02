@@ -17,6 +17,7 @@ mpl.use("Agg")
 from matplotlib.font_manager import FontProperties
 fontP = FontProperties()
 fontP.set_size('small')
+import numpy as np
 import pylab
 
 try:
@@ -36,6 +37,7 @@ class Benchmark(object):
     method = 'test'
     timer = time.time
     plotstyle = {}
+    colormap = 'Set2'
     profilegraph = {}
     meta = {}
     series = {}
@@ -199,6 +201,7 @@ class Benchmark(object):
                        'method': method.__name__,
                        'regions': self.regions.keys(),
                        'plotstyle': self.plotstyle,
+                       'colormap': self.colormap,
                        'meta': self.meta,
                        'series': self.series,
                        'timings': timings}
@@ -230,7 +233,7 @@ class Benchmark(object):
         regions = set()
         for name, pref in files.items():
             res = self._read(name)
-            for key in ['description', 'meta', 'params']:
+            for key in ['description', 'meta', 'params', 'colormap']:
                 result[key] = res[key]
             for k, v in res['plotstyle'].items():
                 plotstyle[pref + ' ' + k] = v
@@ -260,7 +263,7 @@ class Benchmark(object):
             suff = '_'.join('%s%s' % (k, v) for k, v in zip(skeys, svalues))
             fname = '%s_%s' % (filename, suff)
             res = self._read(fname)
-            for key in ['description', 'plotstyle', 'meta', 'regions']:
+            for key in ['description', 'plotstyle', 'meta', 'regions', 'colormap']:
                 result[key] = res[key]
             for k, v in res['timings'].items():
                 timings[k + svalues] = v
@@ -282,6 +285,11 @@ class Benchmark(object):
         format = kwargs.pop('format', 'svg')
         plotdir = kwargs.pop('plotdir', self.plotdir)
         plotstyle = kwargs.pop('plotstyle', self.result['plotstyle'])
+        # Set the default color cycle according to the given color map
+        colormap = kwargs.pop('colormap', self.result.get('colormap', self.colormap))
+        cmap = mpl.cm.get_cmap(name=colormap)
+        colors = [cmap(i) for i in np.linspace(0, 0.9, len(regions))]
+        mpl.rcParams['axes.color_cycle'] = colors
         if not path.exists(plotdir):
             makedirs(plotdir)
 
