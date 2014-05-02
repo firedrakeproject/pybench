@@ -55,9 +55,6 @@ class Benchmark(object):
         self.description = self.__doc__
         for k, v in kwargs.items():
             setattr(self, k, v)
-        for d in [self.plotdir, self.profiledir, self.resultsdir]:
-            if not path.exists(d):
-                makedirs(d)
         if isinstance(self.method, str):
             self.method = getattr(self, self.method, self.method)
         self.regions = defaultdict(float)
@@ -139,6 +136,8 @@ class Benchmark(object):
         formats = profilegraph['format'].split(',') if profilegraph else []
         regions = kwargs.pop('regions', ['total'])
         out = path.join(profiledir, name)
+        if not path.exists(profiledir):
+            makedirs(profiledir)
         pkeys, pvals = zip(*params)
         for pvalues in product(*pvals):
             if rank == 0:
@@ -211,6 +210,8 @@ class Benchmark(object):
         filename = filename or self.name
         if filename.endswith(self.suffix):
             return filename
+        if not path.exists(self.resultsdir):
+            makedirs(self.resultsdir)
         return path.join(self.resultsdir, filename + self.suffix)
 
     def _read(self, filename=None):
