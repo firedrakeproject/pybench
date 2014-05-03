@@ -166,6 +166,19 @@ class Benchmark(object):
         average = kwargs.pop('average', self.average)
 
         timings = {}
+        self.result = {'name': name,
+                       'description': description,
+                       'params': params,
+                       'repeats': repeats,
+                       'warmups': warmups,
+                       'average': average.__name__,
+                       'method': method.__name__,
+                       'regions': self.regions.keys(),
+                       'plotstyle': self.plotstyle,
+                       'colormap': self.colormap,
+                       'meta': self.meta,
+                       'series': self.series,
+                       'timings': timings}
         if params:
             pkeys, pvals = zip(*params)
         else:
@@ -191,19 +204,8 @@ class Benchmark(object):
                 timings[pvalues] = times
             else:
                 timings = times
-        self.result = {'name': name,
-                       'description': description,
-                       'params': params,
-                       'repeats': repeats,
-                       'warmups': warmups,
-                       'average': average.__name__,
-                       'method': method.__name__,
-                       'regions': self.regions.keys(),
-                       'plotstyle': self.plotstyle,
-                       'colormap': self.colormap,
-                       'meta': self.meta,
-                       'series': self.series,
-                       'timings': timings}
+            # Auto save
+            self.save(suffix='.autosave~')
         return self.result
 
     def _file(self, filename=None, suffix=None):
