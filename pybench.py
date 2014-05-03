@@ -206,25 +206,26 @@ class Benchmark(object):
                        'timings': timings}
         return self.result
 
-    def _file(self, filename=None):
+    def _file(self, filename=None, suffix=None):
         filename = filename or self.name
-        if filename.endswith(self.suffix):
+        suffix = suffix or self.suffix
+        if filename.endswith(suffix):
             return filename
         if not path.exists(self.resultsdir):
             makedirs(self.resultsdir)
-        return path.join(self.resultsdir, filename + self.suffix)
+        return path.join(self.resultsdir, filename + suffix)
 
-    def _read(self, filename=None):
-        with open(self._file(filename)) as f:
+    def _read(self, filename=None, suffix=None):
+        with open(self._file(filename, suffix)) as f:
             return eval(f.read())
 
-    def load(self, filename=None):
+    def load(self, filename=None, suffix=None):
         self.result = self._read(filename)
         return self.result
 
-    def save(self, filename=None):
+    def save(self, filename=None, suffix=None):
         if rank == 0:
-            with open(self._file(filename), 'w') as f:
+            with open(self._file(filename, suffix), 'w') as f:
                 pprint(self.result, f)
 
     def combine(self, files):
