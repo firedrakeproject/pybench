@@ -300,8 +300,9 @@ class Benchmark(object):
         pkeys, pvals = zip(*params)
         pnames = [p for p in pkeys if p != xaxis]
         idx = pkeys.index(xaxis)
-        xvals = pvals[idx]
-        for pv in product(*[p for p in pvals if p != xvals]):
+        pvals = list(pvals)
+        xvals = pvals.pop(idx)
+        for pv in product(*pvals):
             fsuff = '_'.join('%s%s' % (k, v) for k, v in zip(pnames, pv))
             tsuff = ', '.join('%s=%s' % (k, v) for k, v in zip(pnames, pv))
             fig = pylab.figure(figname + '_' + fsuff, figsize=(9, 6), dpi=300)
