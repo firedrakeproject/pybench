@@ -6,7 +6,7 @@ from datetime import datetime
 from inspect import getfile
 from itertools import product
 import json
-from os import path, makedirs
+from os import path, makedirs, remove
 from pprint import pprint
 import shutil
 from subprocess import call
@@ -226,6 +226,11 @@ class Benchmark(object):
         return self.result
 
     def save(self, filename=None, suffix=None):
+        if path.exists(self._file(filename, '.autosave~')):
+            try:
+                remove(self._file(filename, '.autosave~'))
+            except OSError:
+                pass
         if rank == 0:
             with open(self._file(filename, suffix), 'w') as f:
                 pprint(self.result, f)
