@@ -70,6 +70,9 @@ class Benchmark(object):
         if name in self.profiles:
             self.profiles[name].disable()
 
+    def register_timing(self, name, value):
+        self.regions[name] += value
+
     def _args(self, kwargs):
         name = kwargs.pop('name', self.name)
         params = kwargs.pop('params', self.params)
