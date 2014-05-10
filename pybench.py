@@ -48,7 +48,7 @@ class Benchmark(object):
         self.plotdir = path.join(self.basedir, 'plots')
         self.profiledir = path.join(self.basedir, 'profiles')
         self.resultsdir = path.join(self.basedir, 'results')
-        self.name = self.__class__.__name__
+        self.name = getattr(self, 'name', self.__class__.__name__)
         if self.series:
             suff = '_'.join('%s%s' % (k, v) for k, v in self.series.items())
             self.name += '_' + suff
