@@ -297,6 +297,7 @@ class Benchmark(object):
         format = kwargs.pop('format', 'svg')
         plotdir = kwargs.pop('plotdir', self.plotdir)
         plotstyle = kwargs.pop('plotstyle', self.result['plotstyle'])
+        wscale = kwargs.pop('wscale', 0.8)
         # Set the default color cycle according to the given color map
         colormap = kwargs.pop('colormap', self.result.get('colormap', self.colormap))
         cmap = mpl.cm.get_cmap(name=colormap)
@@ -323,7 +324,7 @@ class Benchmark(object):
                     pass
             # Shink current axis by 20%
             box = ax.get_position()
-            ax.set_position([box.x0, box.y0, box.width * 0.75, box.height])
+            ax.set_position([box.x0, box.y0, box.width * wscale, box.height])
             # Put a legend to the right of the current axis
             ax.legend(loc='center left', bbox_to_anchor=(1, 0.5), prop=fontP)
             pylab.xlabel(xlabel)
