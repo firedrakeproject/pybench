@@ -230,14 +230,15 @@ class Benchmark(object):
         return self.result
 
     def save(self, filename=None, suffix=None):
+        if rank > 0:
+            return
         if path.exists(self._file(filename, '.autosave~')):
             try:
                 remove(self._file(filename, '.autosave~'))
             except OSError:
                 pass
-        if rank == 0:
-            with open(self._file(filename, suffix), 'w') as f:
-                pprint(self.result, f)
+        with open(self._file(filename, suffix), 'w') as f:
+            pprint(self.result, f)
 
     def combine(self, files):
         result = {'name': self.name, 'series': self.series}
