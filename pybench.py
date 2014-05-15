@@ -301,6 +301,7 @@ class Benchmark(object):
         plotstyle = kwargs.pop('plotstyle', self.result['plotstyle'])
         kind = kwargs.pop('kind', 'plot')
         wscale = kwargs.pop('wscale', 0.8)
+        transform = kwargs.get('transform')
         # Set the default color cycle according to the given color map
         colormap = kwargs.pop('colormap', self.result.get('colormap', self.colormap))
         cmap = mpl.cm.get_cmap(name=colormap)
@@ -326,6 +327,8 @@ class Benchmark(object):
             for r in regions:
                 try:
                     yvals = [timings[pv[:idx] + (v,) + pv[idx:]][r] for v in xvals]
+                    if transform:
+                        yvals = transform(xvals, yvals)
                     plot(xvalues or xvals, yvals, label=r, **plotstyle.get(r, {}))
                 except KeyError:
                     pass
