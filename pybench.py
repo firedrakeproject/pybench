@@ -39,6 +39,7 @@ class Benchmark(object):
     plotstyle = {}
     colormap = 'Set2'
     profilegraph = {}
+    profileregions = ['total']
     meta = {}
     series = {}
     suffix = '.dat'
@@ -137,7 +138,7 @@ class Benchmark(object):
         n = profilegraph.get('node_threshold', 1.0)
         e = profilegraph.get('edge_threshold', 0.2)
         formats = profilegraph['format'].split(',') if profilegraph else []
-        regions = kwargs.pop('regions', ['total'])
+        regions = kwargs.pop('regions', self.profileregions)
         out = path.join(profiledir, name)
         if not path.exists(profiledir):
             makedirs(profiledir)
