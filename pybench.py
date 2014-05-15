@@ -299,6 +299,7 @@ class Benchmark(object):
         format = kwargs.pop('format', 'svg')
         plotdir = kwargs.pop('plotdir', self.plotdir)
         plotstyle = kwargs.pop('plotstyle', self.result['plotstyle'])
+        kind = kwargs.pop('kind', 'plot')
         wscale = kwargs.pop('wscale', 0.8)
         # Set the default color cycle according to the given color map
         colormap = kwargs.pop('colormap', self.result.get('colormap', self.colormap))
@@ -318,10 +319,14 @@ class Benchmark(object):
             tsuff = ', '.join('%s=%s' % (k, v) for k, v in zip(pnames, pv))
             fig = pylab.figure(figname + '_' + fsuff, figsize=(9, 6), dpi=300)
             ax = pylab.subplot(111)
+            plot = {'plot': ax.plot,
+                    'semilogx': ax.semilogx,
+                    'semilogy': ax.semilogy,
+                    'loglog': ax.loglog}[kind]
             for r in regions:
                 try:
                     yvals = [timings[pv[:idx] + (v,) + pv[idx:]][r] for v in xvals]
-                    ax.plot(xvalues or xvals, yvals, label=r, **plotstyle.get(r, {}))
+                    plot(xvalues or xvals, yvals, label=r, **plotstyle.get(r, {}))
                 except KeyError:
                     pass
             # Shink current axis by 20%
