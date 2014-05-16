@@ -299,7 +299,7 @@ class Benchmark(object):
         format = kwargs.pop('format', 'svg')
         plotdir = kwargs.pop('plotdir', self.plotdir)
         plotstyle = kwargs.pop('plotstyle', self.result['plotstyle'])
-        kind = kwargs.pop('kind', 'plot')
+        kinds = kwargs.pop('kinds', 'plot')
         wscale = kwargs.pop('wscale', 0.8)
         transform = kwargs.get('transform')
         # Set the default color cycle according to the given color map
@@ -318,36 +318,39 @@ class Benchmark(object):
         for pv in product(*pvals):
             fsuff = '_'.join('%s%s' % (k, v) for k, v in zip(pnames, pv))
             tsuff = ', '.join('%s=%s' % (k, v) for k, v in zip(pnames, pv))
-            fig = pylab.figure(figname + '_' + fsuff, figsize=(9, 6), dpi=300)
-            ax = pylab.subplot(111)
-            plot = {'plot': ax.plot,
-                    'semilogx': ax.semilogx,
-                    'semilogy': ax.semilogy,
-                    'loglog': ax.loglog}[kind]
-            for r in regions:
-                try:
-                    yvals = [timings[pv[:idx] + (v,) + pv[idx:]][r] for v in xvals]
-                    if transform:
-                        yvals = transform(xvals, yvals)
-                    plot(xvalues or xvals, yvals, label=r, **plotstyle.get(r, {}))
-                except KeyError:
-                    pass
-            # Shink current axis by 20%
-            box = ax.get_position()
-            ax.set_position([box.x0, box.y0, box.width * wscale, box.height])
-            # Put a legend to the right of the current axis
-            ax.legend(loc='center left', bbox_to_anchor=(1, 0.5), prop=fontP)
-            pylab.xlabel(xlabel)
-            pylab.ylabel(ylabel)
-            pylab.title(title + ': ' + tsuff)
-            pylab.grid()
-            if not format:
-                pylab.show()
-            else:
-                for fmt in format.split(','):
-                    pylab.savefig(path.join(plotdir, '%s_%s.%s' % (figname, fsuff, fmt)),
-                                  orientation='landscape', format=fmt, transparent=True)
-            pylab.close(fig)
+            for kind in kinds.split(','):
+                fig = pylab.figure(figname + '_' + fsuff, figsize=(9, 6), dpi=300)
+                ax = pylab.subplot(111)
+                plot = {'plot': ax.plot,
+                        'semilogx': ax.semilogx,
+                        'semilogy': ax.semilogy,
+                        'loglog': ax.loglog}[kind]
+                for r in regions:
+                    try:
+                        yvals = [timings[pv[:idx] + (v,) + pv[idx:]][r] for v in xvals]
+                        if transform:
+                            yvals = transform(xvals, yvals)
+                        plot(xvalues or xvals, yvals, label=r, **plotstyle.get(r, {}))
+                    except KeyError:
+                        pass
+                # Shink current axis by 20%
+                box = ax.get_position()
+                ax.set_position([box.x0, box.y0, box.width * wscale, box.height])
+                # Put a legend to the right of the current axis
+                ax.legend(loc='center left', bbox_to_anchor=(1, 0.5), prop=fontP)
+                pylab.xlabel(xlabel)
+                pylab.ylabel(ylabel)
+                pylab.title(title + ': ' + tsuff)
+                pylab.grid()
+                if not format:
+                    pylab.show()
+                else:
+                    for fmt in format.split(','):
+                        pylab.savefig(path.join(plotdir, '%s_%s_%s.%s'
+                                                % (figname, kind, fsuff, fmt)),
+                                      orientation='landscape', format=fmt,
+                                      transparent=True)
+                pylab.close(fig)
 
     def archive(self, dirname=None):
         timestamp = datetime.now().strftime('%Y-%m-%dT%H%M%S')
