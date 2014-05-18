@@ -301,6 +301,7 @@ class Benchmark(object):
         plotstyle = kwargs.pop('plotstyle', self.result['plotstyle'])
         kinds = kwargs.pop('kinds', 'plot')
         wscale = kwargs.pop('wscale', 0.8)
+        bargroups = kwargs.get('bargroups', [''])
         transform = kwargs.get('transform')
         # Set the default color cycle according to the given color map
         colormap = kwargs.pop('colormap', self.result.get('colormap', self.colormap))
@@ -309,6 +310,12 @@ class Benchmark(object):
         mpl.rcParams['axes.color_cycle'] = colors
         if not path.exists(plotdir):
             makedirs(plotdir)
+
+        def group(r):
+            for i, g in enumerate(bargroups):
+                if g in r:
+                    return i
+            return 0
 
         pkeys, pvals = zip(*params)
         pnames = [p for p in pkeys if p != xaxis]
@@ -323,18 +330,26 @@ class Benchmark(object):
             for kind in kinds.split(','):
                 fig = pylab.figure(figname + '_' + fsuff, figsize=(9, 6), dpi=300)
                 ax = pylab.subplot(111)
+                if kind == 'barstacked':
+                    ystack = [np.zeros_like(xvals, dtype=np.float) for _ in bargroups]
                 plot = {'bar': ax.bar,
+                        'barstacked': ax.bar,
                         'plot': ax.plot,
                         'semilogx': ax.semilogx,
                         'semilogy': ax.semilogy,
                         'loglog': ax.loglog}[kind]
-                w = 0.8 / len(regions)
+                w = 0.8 / len(regions if kind == 'bar' else bargroups)
                 for i, r in enumerate(regions):
                     try:
                         yvals = [timings[pv[:idx] + (v,) + pv[idx:]][r] for v in xvals]
                         if transform:
                             yvals = transform(xvals, yvals)
-                        if kind == 'bar':
+                        if kind == 'barstacked':
+                            plot(offset + group(r) * w, yvals, w,
+                                 bottom=ystack[group(r)], label=r, color=colors[i])
+                            pylab.xticks(xticks, xvalues or xvals)
+                            ystack[group(r)] += yvals
+                        elif kind == 'bar':
                             plot(offset + i * w, yvals, w, label=r, color=colors[i])
                             pylab.xticks(xticks, xvalues or xvals)
                         else:
