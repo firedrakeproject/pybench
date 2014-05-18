@@ -296,6 +296,7 @@ class Benchmark(object):
         ylabel = kwargs.pop('ylabel', 'time [sec]')
         regions = kwargs.pop('regions', self.result['regions'])
         title = kwargs.pop('title', self.name)
+        legend = kwargs.get('legend', 'center left')
         format = kwargs.pop('format', 'svg')
         plotdir = kwargs.pop('plotdir', self.plotdir)
         plotstyle = kwargs.pop('plotstyle', self.result['plotstyle'])
@@ -356,11 +357,14 @@ class Benchmark(object):
                             plot(xvalues or xvals, yvals, label=r, **plotstyle.get(r, {}))
                     except KeyError:
                         pass
-                # Shink current axis by 20%
-                box = ax.get_position()
-                ax.set_position([box.x0, box.y0, box.width * wscale, box.height])
-                # Put a legend to the right of the current axis
-                ax.legend(loc='center left', bbox_to_anchor=(1, 0.5), prop=fontP)
+                if legend == 'center left':
+                    # Shink current axis by 20%
+                    box = ax.get_position()
+                    ax.set_position([box.x0, box.y0, box.width * wscale, box.height])
+                    # Put a legend to the right of the current axis
+                    ax.legend(loc='center left', bbox_to_anchor=(1, 0.5), prop=fontP)
+                else:
+                    ax.legend(loc=legend, prop=fontP)
                 pylab.xlabel(xlabel)
                 pylab.ylabel(ylabel)
                 pylab.title(title + ': ' + tsuff)
