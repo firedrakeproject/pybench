@@ -315,22 +315,30 @@ class Benchmark(object):
         idx = pkeys.index(xaxis)
         pvals = list(pvals)
         xvals = pvals.pop(idx)
+        offset = np.arange(len(xvals)) + 0.1
+        xticks = np.arange(len(xvals)) + 0.5
         for pv in product(*pvals):
             fsuff = '_'.join('%s%s' % (k, v) for k, v in zip(pnames, pv))
             tsuff = ', '.join('%s=%s' % (k, v) for k, v in zip(pnames, pv))
             for kind in kinds.split(','):
                 fig = pylab.figure(figname + '_' + fsuff, figsize=(9, 6), dpi=300)
                 ax = pylab.subplot(111)
-                plot = {'plot': ax.plot,
+                plot = {'bar': ax.bar,
+                        'plot': ax.plot,
                         'semilogx': ax.semilogx,
                         'semilogy': ax.semilogy,
                         'loglog': ax.loglog}[kind]
-                for r in regions:
+                w = 0.8 / len(regions)
+                for i, r in enumerate(regions):
                     try:
                         yvals = [timings[pv[:idx] + (v,) + pv[idx:]][r] for v in xvals]
                         if transform:
                             yvals = transform(xvals, yvals)
-                        plot(xvalues or xvals, yvals, label=r, **plotstyle.get(r, {}))
+                        if kind == 'bar':
+                            plot(offset + i * w, yvals, w, label=r, color=colors[i])
+                            pylab.xticks(xticks, xvalues or xvals)
+                        else:
+                            plot(xvalues or xvals, yvals, label=r, **plotstyle.get(r, {}))
                     except KeyError:
                         pass
                 # Shink current axis by 20%
