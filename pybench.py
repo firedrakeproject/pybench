@@ -31,18 +31,33 @@ except ImportError:
 class Benchmark(object):
     """An abstract base class for benchmarks."""
     params = []
+    """The parameters to run the benchmark for, a list of tuples."""
     repeats = 3
+    """How often to repeat each benchmark."""
     warmups = 1
+    """How man dry runs to perform before timing."""
     average = min
+    """The function used to average over multiple benchmark runs."""
     method = 'test'
+    """The methods to run the benchmark for."""
     timer = time.time
+    """The timer to use."""
     plotstyle = {}
+    """The plot style to use for each timed region (a nested dictionary with a
+    key per region and a dictionary of plot options as the value)."""
     colormap = 'Set2'
+    """The matplotlib colormap to cycle through."""
     profilegraph = {}
+    """Options for creating the profile graph with gprof2dot."""
     profileregions = ['total']
+    """Regions to create profile graphs for."""
     meta = {}
+    """Metadata to include in result output."""
     series = {}
+    """Benchmark series created from several invocations of the script e.g.
+    for parallel runs on variable number of processors."""
     suffix = '.dat'
+    """Suffix for the result file to write."""
 
     def __init__(self, **kwargs):
         self.basedir = path.dirname(getfile(self.__class__))
