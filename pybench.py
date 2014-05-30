@@ -350,23 +350,27 @@ class Benchmark(object):
                     ystack = [np.zeros_like(xvals, dtype=np.float) for _ in bargroups]
                 plot = {'bar': ax.bar,
                         'barstacked': ax.bar,
+                        'barlog': ax.bar,
+                        'barstackedlog': ax.bar,
                         'plot': ax.plot,
                         'semilogx': ax.semilogx,
                         'semilogy': ax.semilogy,
                         'loglog': ax.loglog}[kind]
-                w = 0.8 / len(regions if kind == 'bar' else bargroups)
+                w = 0.8 / len(regions if kind in ['bar', 'barlog'] else bargroups)
                 for i, r in enumerate(regions):
                     try:
                         yvals = [timings[pv[:idx] + (v,) + pv[idx:]][r] for v in xvals]
                         if transform:
                             yvals = transform(xvals, yvals)
-                        if kind == 'barstacked':
+                        if kind in ['barstacked', 'barstackedlog']:
                             plot(offset + group(r) * w, yvals, w,
-                                 bottom=ystack[group(r)], label=r, color=colors[i])
+                                 bottom=ystack[group(r)], label=r, color=colors[i],
+                                 log=kind == 'barstackedlog')
                             pylab.xticks(xticks, xvalues or xvals)
                             ystack[group(r)] += yvals
-                        elif kind == 'bar':
-                            plot(offset + i * w, yvals, w, label=r, color=colors[i])
+                        elif kind in ['bar', 'barlog']:
+                            plot(offset + i * w, yvals, w, label=r, color=colors[i],
+                                 log=kind == 'barlog')
                             pylab.xticks(xticks, xvalues or xvals)
                         else:
                             plot(xvalues or xvals, yvals, label=r, **plotstyle.get(r, {}))
