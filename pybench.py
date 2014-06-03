@@ -310,6 +310,7 @@ class Benchmark(object):
         xvalues = kwargs.pop('xvalues', None)
         ylabel = kwargs.pop('ylabel', 'time [sec]')
         regions = kwargs.pop('regions', self.result['regions'])
+        groups = kwargs.get('groups', [])
         title = kwargs.pop('title', self.name)
         legend = kwargs.get('legend', 'center left')
         format = kwargs.pop('format', 'svg')
@@ -322,8 +323,6 @@ class Benchmark(object):
         # Set the default color cycle according to the given color map
         colormap = kwargs.pop('colormap', self.result.get('colormap', self.colormap))
         cmap = mpl.cm.get_cmap(name=colormap)
-        colors = [cmap(i) for i in np.linspace(0, 0.9, len(regions))]
-        mpl.rcParams['axes.color_cycle'] = colors
         if not path.exists(plotdir):
             makedirs(plotdir)
 
@@ -334,15 +333,25 @@ class Benchmark(object):
             return 0
 
         pkeys, pvals = zip(*params)
-        pnames = [p for p in pkeys if p != xaxis]
-        idx = pkeys.index(xaxis)
-        pvals = list(pvals)
-        xvals = pvals.pop(idx)
+        idx = [pkeys.index(a) for a in [xaxis] + groups]
+        pkeys = [p for p in pkeys if p not in [xaxis] + groups]
+        xvals = pvals[idx[0]]
+        gvals = [pvals[i] for i in idx[1:]]
+        pvals = [p for i, p in enumerate(pvals) if i not in idx]
+        nlines = len(regions) + sum(len(g) for g in gvals)
+        colors = [cmap(i) for i in np.linspace(0, 0.9, nlines)]
+        mpl.rcParams['axes.color_cycle'] = colors
+
+        def lookup(pv, *args):
+            for i, a in sorted(zip(idx, args)):
+                pv = pv[:i] + (a,) + pv[i:]
+            return timings[pv]
+
         offset = np.arange(len(xvals)) + 0.1
         xticks = np.arange(len(xvals)) + 0.5
         for pv in product(*pvals):
-            fsuff = '_'.join('%s%s' % (k, v) for k, v in zip(pnames, pv))
-            tsuff = ', '.join('%s=%s' % (k, v) for k, v in zip(pnames, pv))
+            fsuff = '_'.join('%s%s' % (k, v) for k, v in zip(pkeys, pv))
+            tsuff = ', '.join('%s=%s' % (k, v) for k, v in zip(pkeys, pv))
             for kind in kinds.split(','):
                 fig = pylab.figure(figname + '_' + fsuff, figsize=(9, 6), dpi=300)
                 ax = pylab.subplot(111)
@@ -356,26 +365,30 @@ class Benchmark(object):
                         'semilogx': ax.semilogx,
                         'semilogy': ax.semilogy,
                         'loglog': ax.loglog}[kind]
-                w = 0.8 / len(regions if kind in ['bar', 'barlog'] else bargroups)
-                for i, r in enumerate(regions):
-                    try:
-                        yvals = [timings[pv[:idx] + (v,) + pv[idx:]][r] for v in xvals]
-                        if transform:
-                            yvals = transform(xvals, yvals)
-                        if kind in ['barstacked', 'barstackedlog']:
-                            plot(offset + group(r) * w, yvals, w,
-                                 bottom=ystack[group(r)], label=r, color=colors[i],
-                                 log=kind == 'barstackedlog')
-                            pylab.xticks(xticks, xvalues or xvals)
-                            ystack[group(r)] += yvals
-                        elif kind in ['bar', 'barlog']:
-                            plot(offset + i * w, yvals, w, label=r, color=colors[i],
-                                 log=kind == 'barlog')
-                            pylab.xticks(xticks, xvalues or xvals)
-                        else:
-                            plot(xvalues or xvals, yvals, label=r, **plotstyle.get(r, {}))
-                    except KeyError:
-                        pass
+                w = 0.8 / nlines if kind in ['bar', 'barlog'] else len(bargroups)
+                i = 0
+                for gv in product(*gvals):
+                    for r in regions:
+                        try:
+                            yvals = [lookup(pv, v, *gv)[r] for v in xvals]
+                            label = ', '.join((r,) + gv)
+                            if transform:
+                                yvals = transform(xvals, yvals)
+                            if kind in ['barstacked', 'barstackedlog']:
+                                plot(offset + group(r) * w, yvals, w,
+                                     bottom=ystack[group(r)], label=label, color=colors[i],
+                                     log=kind == 'barstackedlog')
+                                pylab.xticks(xticks, xvalues or xvals)
+                                ystack[group(r)] += yvals
+                            elif kind in ['bar', 'barlog']:
+                                plot(offset + i * w, yvals, w, label=label, color=colors[i],
+                                     log=kind == 'barlog')
+                                pylab.xticks(xticks, xvalues or xvals)
+                            else:
+                                plot(xvalues or xvals, yvals, label=label, **plotstyle.get(r, {}))
+                        except KeyError:
+                            raise
+                        i += 1
                 if legend == 'center left':
                     # Shink current axis by 20%
                     box = ax.get_position()
