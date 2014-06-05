@@ -323,6 +323,7 @@ class Benchmark(object):
         # Set the default color cycle according to the given color map
         colormap = kwargs.pop('colormap', self.result.get('colormap', self.colormap))
         cmap = mpl.cm.get_cmap(name=colormap)
+        linestyles = ('solid', 'dashed', 'dashdot', 'dotted')
         if not path.exists(plotdir):
             makedirs(plotdir)
 
@@ -369,7 +370,7 @@ class Benchmark(object):
                         'loglog': ax.loglog}[kind]
                 w = 0.8 / nlines if kind in ['bar', 'barlog'] else len(bargroups)
                 i = 0
-                for gv in product(*gvals):
+                for g, gv in enumerate(product(*gvals)):
                     for r in regions:
                         try:
                             yvals = [lookup(pv, v, *gv)[r] for v in xvals]
@@ -378,16 +379,19 @@ class Benchmark(object):
                                 yvals = transform(xvals, yvals)
                             if kind in ['barstacked', 'barstackedlog']:
                                 plot(offset + group(r) * w, yvals, w,
-                                     bottom=ystack[group(r)], label=label, color=colors[i],
+                                     bottom=ystack[group(r)], label=label,
+                                     color=colors[i], linestyle=linestyles[g % 4],
                                      log=kind == 'barstackedlog')
                                 pylab.xticks(xticks, xvalues or xvals)
                                 ystack[group(r)] += yvals
                             elif kind in ['bar', 'barlog']:
-                                plot(offset + i * w, yvals, w, label=label, color=colors[i],
+                                plot(offset + i * w, yvals, w, label=label,
+                                     color=colors[i], linestyle=linestyles[g % 4],
                                      log=kind == 'barlog')
                                 pylab.xticks(xticks, xvalues or xvals)
                             else:
-                                plot(xvalues or xvals, yvals, label=label, **plotstyle.get(r, {}))
+                                plot(xvalues or xvals, yvals, label=label,
+                                     linestyle=linestyles[g % 4], **plotstyle.get(r, {}))
                         except KeyError:
                             raise
                         i += 1
