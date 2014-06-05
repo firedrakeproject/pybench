@@ -349,9 +349,11 @@ class Benchmark(object):
 
         offset = np.arange(len(xvals)) + 0.1
         xticks = np.arange(len(xvals)) + 0.5
+        outline = []
         for pv in product(*pvals):
             fsuff = '_'.join('%s%s' % (k, v) for k, v in zip(pkeys, pv))
             tsuff = ', '.join('%s=%s' % (k, v) for k, v in zip(pkeys, pv))
+            outline += ['<tr>']
             for kind in kinds.split(','):
                 fig = pylab.figure(figname + '_' + fsuff, figsize=(9, 6), dpi=300)
                 ax = pylab.subplot(111)
@@ -405,11 +407,15 @@ class Benchmark(object):
                     pylab.show()
                 else:
                     for fmt in format.split(','):
-                        pylab.savefig(path.join(plotdir, '%s_%s_%s.%s'
-                                                % (figname, kind, fsuff, fmt)),
+                        fname = '%s_%s_%s.%s' % (figname, kind, fsuff, fmt)
+                        pylab.savefig(path.join(plotdir, fname),
                                       orientation='landscape', format=fmt,
                                       transparent=True)
+                        outline += ['<td><img src="%s"></td>' % fname]
                 pylab.close(fig)
+            outline += ['</tr>']
+            with open(path.join(plotdir, '%s_%s.html' % (figname, xaxis)), 'w') as f:
+                f.write('\n'.join(outline))
 
     def archive(self, dirname=None):
         timestamp = datetime.now().strftime('%Y-%m-%dT%H%M%S')
