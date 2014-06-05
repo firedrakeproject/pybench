@@ -319,6 +319,7 @@ class Benchmark(object):
         kinds = kwargs.pop('kinds', 'plot')
         wscale = kwargs.pop('wscale', 0.8)
         bargroups = kwargs.get('bargroups', [''])
+        speedup = kwargs.get('speedup')
         transform = kwargs.get('transform')
         # Set the default color cycle according to the given color map
         colormap = kwargs.pop('colormap', self.result.get('colormap', self.colormap))
@@ -353,6 +354,8 @@ class Benchmark(object):
         outline = []
         for pv in product(*pvals):
             fsuff = '_'.join('%s%s' % (k, v) for k, v in zip(pkeys, pv))
+            if speedup:
+                fsuff += '_speedup'
             tsuff = ', '.join('%s=%s' % (k, v) for k, v in zip(pkeys, pv))
             outline += ['<tr>']
             for kind in kinds.split(','):
@@ -373,8 +376,10 @@ class Benchmark(object):
                 for g, gv in enumerate(product(*gvals)):
                     for r in regions:
                         try:
-                            yvals = [lookup(pv, v, *gv)[r] for v in xvals]
+                            yvals = np.array([lookup(pv, v, *gv)[r] for v in xvals])
                             label = ', '.join((r,) + gv)
+                            if speedup:
+                                yvals = lookup(pv, *speedup)[r] / yvals
                             if transform:
                                 yvals = transform(xvals, yvals)
                             if kind in ['barstacked', 'barstackedlog']:
@@ -418,7 +423,8 @@ class Benchmark(object):
                         outline += ['<td><img src="%s"></td>' % fname]
                 pylab.close(fig)
             outline += ['</tr>']
-            with open(path.join(plotdir, '%s_%s.html' % (figname, xaxis)), 'w') as f:
+            fname = '%s_%s%s.html' % (figname, xaxis, '_speedup' if speedup else '')
+            with open(path.join(plotdir, fname), 'w') as f:
                 f.write('\n'.join(outline))
 
     def archive(self, dirname=None):
