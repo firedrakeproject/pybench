@@ -338,7 +338,7 @@ class Benchmark(object):
         xvals = pvals[idx[0]]
         gvals = [pvals[i] for i in idx[1:]]
         pvals = [p for i, p in enumerate(pvals) if i not in idx]
-        nlines = len(regions) + sum(len(g) for g in gvals)
+        nlines = len(regions) * sum(len(g) for g in gvals)
         colors = [cmap(i) for i in np.linspace(0, 0.9, nlines)]
         mpl.rcParams['axes.color_cycle'] = colors
 
