@@ -312,7 +312,7 @@ class Benchmark(object):
         regions = kwargs.pop('regions', self.result['regions'])
         groups = kwargs.get('groups', [])
         title = kwargs.pop('title', self.name)
-        legend = kwargs.get('legend', 'center left')
+        legend = kwargs.get('legend', 'best')
         format = kwargs.pop('format', 'svg')
         plotdir = kwargs.pop('plotdir', self.plotdir)
         plotstyle = kwargs.pop('plotstyle', self.result['plotstyle'])
