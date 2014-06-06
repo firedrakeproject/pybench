@@ -77,12 +77,12 @@ class Benchmark(object):
         self.profiles = {}
 
     @contextmanager
-    def timed_region(self, name):
+    def timed_region(self, name, normalize=1.0):
         if name in self.profiles:
             self.profiles[name].enable()
         t_ = self.timer()
         yield
-        self.regions[name] += self.timer() - t_
+        self.regions[name] += (self.timer() - t_) * normalize
         if name in self.profiles:
             self.profiles[name].disable()
 
