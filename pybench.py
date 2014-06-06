@@ -319,6 +319,9 @@ class Benchmark(object):
         kinds = kwargs.pop('kinds', 'plot')
         wscale = kwargs.pop('wscale', 0.8)
         bargroups = kwargs.get('bargroups', [''])
+        # A tuple of either the same length as groups (speedup relative to a
+        # a specimen in the group) or 1 + length of groups (speedup relative to
+        # a single data point)
         speedup = kwargs.get('speedup')
         transform = kwargs.get('transform')
         # Set the default color cycle according to the given color map
@@ -378,7 +381,13 @@ class Benchmark(object):
                         try:
                             yvals = np.array([lookup(pv, v, *gv)[r] for v in xvals])
                             label = ', '.join((r,) + gv)
-                            if speedup:
+                            # 1) speedup relative to a specimen in the group
+                            if speedup and len(speedup) == len(gv):
+                                if speedup == gv:
+                                    continue
+                                yvals = np.array([lookup(pv, v, *speedup)[r] for v in xvals]) / yvals
+                            # 2) speedup relative to a single datapoint
+                            elif speedup:
                                 yvals = lookup(pv, *speedup)[r] / yvals
                             if transform:
                                 yvals = transform(xvals, yvals)
