@@ -438,7 +438,7 @@ class Benchmark(object):
                         outline += ['<td><img src="%s"></td>' % fname]
                 pylab.close(fig)
             outline += ['</tr>']
-            fname = '%s_%s%s.html' % (figname, xaxis, '_speedup' if speedup else '')
+            fname = '%s_%s_%s%s.html' % (figname, xaxis, '_'.join(groups), '_speedup' if speedup else '')
             with open(path.join(plotdir, fname), 'w') as f:
                 f.write('\n'.join(outline))
 
