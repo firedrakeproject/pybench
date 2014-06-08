@@ -322,7 +322,7 @@ class Benchmark(object):
         # A tuple of either the same length as groups (speedup relative to a
         # a specimen in the group) or 1 + length of groups (speedup relative to
         # a single data point)
-        speedup = kwargs.get('speedup')
+        speedup = kwargs.get('speedup', False)
         transform = kwargs.get('transform')
         # Set the default color cycle according to the given color map
         colormap = kwargs.pop('colormap', self.result.get('colormap', self.colormap))
@@ -344,9 +344,11 @@ class Benchmark(object):
         xvals = pvals[idx[0]]
         gvals = [pvals[i] for i in idx[1:]]
         pvals = [p for i, p in enumerate(pvals) if i not in idx]
-        nlines = len(regions) * sum(len(g) for g in gvals)
         colors = [cmap(i) for i in np.linspace(0, 0.9, len(regions))]
         mpl.rcParams['axes.color_cycle'] = colors
+        speedup_group = speedup and len(speedup) == len(gvals)
+        speedup_single = speedup and len(speedup) == len(gvals) + 1
+        nlines = len(regions) * (sum(len(g) for g in gvals) - int(speedup_group) if gvals else 1)
 
         def lookup(pv, *args):
             for i, a in sorted(zip(idx, args)):
@@ -383,12 +385,12 @@ class Benchmark(object):
                             yvals = np.array([lookup(pv, v, *gv)[r] for v in xvals])
                             label = ', '.join((r,) + gv)
                             # 1) speedup relative to a specimen in the group
-                            if speedup and len(speedup) == len(gv):
+                            if speedup_group:
                                 if speedup == gv:
                                     continue
                                 yvals = np.array([lookup(pv, v, *speedup)[r] for v in xvals]) / yvals
                             # 2) speedup relative to a single datapoint
-                            elif speedup:
+                            elif speedup_single:
                                 yvals = lookup(pv, *speedup)[r] / yvals
                             if transform:
                                 yvals = transform(xvals, yvals)
