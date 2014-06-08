@@ -346,9 +346,12 @@ class Benchmark(object):
         pvals = [p for i, p in enumerate(pvals) if i not in idx]
         colors = [cmap(i) for i in np.linspace(0, 0.9, len(regions))]
         mpl.rcParams['axes.color_cycle'] = colors
-        speedup_group = speedup and len(speedup) == len(gvals)
+        speedup_group = speedup and len(speedup) <= len(gvals)
         speedup_single = speedup and len(speedup) == len(gvals) + 1
-        nlines = len(regions) * (sum(len(g) for g in gvals) - int(speedup_group) if gvals else 1)
+        if speedup_group:
+            for i, s in enumerate(speedup):
+                gvals[i] = filter(lambda x: x != s, gvals[i])
+        nlines = len(regions) * int(np.prod([len(g) for g in gvals]))
 
         def lookup(pv, *args):
             for i, a in sorted(zip(idx, args)):
@@ -383,12 +386,10 @@ class Benchmark(object):
                     for ir, r in enumerate(regions):
                         try:
                             yvals = np.array([lookup(pv, v, *gv)[r] for v in xvals])
-                            label = ', '.join((r,) + gv)
+                            label = ', '.join([r] + map(str, gv[len(speedup or []):]))
                             # 1) speedup relative to a specimen in the group
                             if speedup_group:
-                                if speedup == gv:
-                                    continue
-                                yvals = np.array([lookup(pv, v, *speedup)[r] for v in xvals]) / yvals
+                                yvals = np.array([lookup(pv, v, *(speedup + gv[len(speedup):]))[r] for v in xvals]) / yvals
                             # 2) speedup relative to a single datapoint
                             elif speedup_single:
                                 yvals = lookup(pv, *speedup)[r] / yvals
