@@ -312,7 +312,7 @@ class Benchmark(object):
         regions = kwargs.pop('regions', self.result['regions'])
         groups = kwargs.get('groups', [])
         title = kwargs.pop('title', self.name)
-        legend = kwargs.get('legend', 'best')
+        legend = kwargs.get('legend', {'loc': 'best'})
         format = kwargs.pop('format', 'svg')
         plotdir = kwargs.pop('plotdir', self.plotdir)
         plotstyle = kwargs.pop('plotstyle', self.result['plotstyle'])
@@ -413,14 +413,14 @@ class Benchmark(object):
                         except KeyError:
                             raise
                         i += 1
-                if legend == 'center left':
+                if legend.get('loc') == 'center left':
                     # Shink current axis by 20%
                     box = ax.get_position()
                     ax.set_position([box.x0, box.y0, box.width * wscale, box.height])
                     # Put a legend to the right of the current axis
-                    ax.legend(loc='center left', bbox_to_anchor=(1, 0.5), prop=fontP)
+                    ax.legend(bbox_to_anchor=(1, 0.5), prop=fontP, **legend)
                 else:
-                    ax.legend(loc=legend, prop=fontP)
+                    ax.legend(prop=fontP, **legend)
                 pylab.xlabel(xlabel)
                 pylab.ylabel(ylabel)
                 pylab.title(title + ': ' + tsuff)
