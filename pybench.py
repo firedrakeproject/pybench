@@ -386,7 +386,9 @@ class Benchmark(object):
                     for ir, r in enumerate(regions):
                         try:
                             yvals = np.array([lookup(pv, v, *gv)[r] for v in xvals])
-                            label = ', '.join([r] + map(str, gv[len(speedup or []):]))
+                            # Skip parameters used for speedup when generating label
+                            skip = len(speedup or [])
+                            label = ', '.join([r] + ['%s: %s' % _ for _ in zip(groups[skip:], gv[skip:])])
                             # 1) speedup relative to a specimen in the group
                             if speedup_group:
                                 yvals = np.array([lookup(pv, v, *(speedup + gv[len(speedup):]))[r] for v in xvals]) / yvals
