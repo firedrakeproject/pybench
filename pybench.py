@@ -328,6 +328,7 @@ class Benchmark(object):
         colormap = kwargs.pop('colormap', self.result.get('colormap', self.colormap))
         cmap = mpl.cm.get_cmap(name=colormap)
         linestyles = ('solid', 'dashed', 'dashdot', 'dotted')
+        fillstyles = ('', '/', '\\', '-')
         if not path.exists(plotdir):
             makedirs(plotdir)
 
@@ -394,13 +395,13 @@ class Benchmark(object):
                             if kind in ['barstacked', 'barstackedlog']:
                                 plot(offset + group(r) * w, yvals, w,
                                      bottom=ystack[group(r)], label=label,
-                                     color=colors[ir], linestyle=linestyles[g % 4],
+                                     color=colors[ir], hatch=fillstyles[g % 4],
                                      log=kind == 'barstackedlog')
                                 pylab.xticks(xticks, xvalues or xvals)
                                 ystack[group(r)] += yvals
                             elif kind in ['bar', 'barlog']:
                                 plot(offset + i * w, yvals, w, label=label,
-                                     color=colors[ir], linestyle=linestyles[g % 4],
+                                     color=colors[ir], hatch=fillstyles[g % 4],
                                      log=kind == 'barlog')
                                 pylab.xticks(xticks, xvalues or xvals)
                             else:
