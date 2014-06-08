@@ -344,7 +344,7 @@ class Benchmark(object):
         gvals = [pvals[i] for i in idx[1:]]
         pvals = [p for i, p in enumerate(pvals) if i not in idx]
         nlines = len(regions) * sum(len(g) for g in gvals)
-        colors = [cmap(i) for i in np.linspace(0, 0.9, nlines)]
+        colors = [cmap(i) for i in np.linspace(0, 0.9, len(regions))]
         mpl.rcParams['axes.color_cycle'] = colors
 
         def lookup(pv, *args):
@@ -377,7 +377,7 @@ class Benchmark(object):
                 w = 0.8 / nlines if kind in ['bar', 'barlog'] else len(bargroups)
                 i = 0
                 for g, gv in enumerate(product(*gvals)):
-                    for r in regions:
+                    for ir, r in enumerate(regions):
                         try:
                             yvals = np.array([lookup(pv, v, *gv)[r] for v in xvals])
                             label = ', '.join((r,) + gv)
@@ -394,13 +394,13 @@ class Benchmark(object):
                             if kind in ['barstacked', 'barstackedlog']:
                                 plot(offset + group(r) * w, yvals, w,
                                      bottom=ystack[group(r)], label=label,
-                                     color=colors[i], linestyle=linestyles[g % 4],
+                                     color=colors[ir], linestyle=linestyles[g % 4],
                                      log=kind == 'barstackedlog')
                                 pylab.xticks(xticks, xvalues or xvals)
                                 ystack[group(r)] += yvals
                             elif kind in ['bar', 'barlog']:
                                 plot(offset + i * w, yvals, w, label=label,
-                                     color=colors[i], linestyle=linestyles[g % 4],
+                                     color=colors[ir], linestyle=linestyles[g % 4],
                                      log=kind == 'barlog')
                                 pylab.xticks(xticks, xvalues or xvals)
                             else:
