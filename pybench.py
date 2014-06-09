@@ -363,6 +363,7 @@ class Benchmark(object):
         xticks = np.arange(len(xvals)) + 0.5
         outline = []
         for pv in product(*pvals):
+            pdict = dict(zip(pkeys, pv))
             fsuff = '_'.join('%s%s' % (k, v) for k, v in zip(pkeys, pv))
             if speedup:
                 fsuff += '_speedup'
@@ -426,7 +427,10 @@ class Benchmark(object):
                     ax.legend(prop=fontP, **legend)
                 pylab.xlabel(xlabel)
                 pylab.ylabel(ylabel)
-                pylab.title(title + ': ' + tsuff)
+                if title == self.name:
+                    pylab.title(title + ': ' + tsuff)
+                else:
+                    pylab.title(title % pdict)
                 pylab.grid()
                 if not format:
                     pylab.show()
