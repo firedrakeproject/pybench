@@ -312,6 +312,8 @@ class Benchmark(object):
         regions = kwargs.pop('regions', self.result['regions'])
         groups = kwargs.get('groups', [])
         title = kwargs.pop('title', self.name)
+        # compact (only value) or long (includes parameter name) labels
+        labels = kwargs.get('labels', 'compact')
         legend = kwargs.get('legend', {'loc': 'best'})
         format = kwargs.pop('format', 'svg')
         plotdir = kwargs.pop('plotdir', self.plotdir)
@@ -390,7 +392,10 @@ class Benchmark(object):
                             yvals = np.array([lookup(pv, v, *gv)[r] for v in xvals])
                             # Skip parameters used for speedup when generating label
                             skip = len(speedup or [])
-                            label = ', '.join([r] + ['%s: %s' % _ for _ in zip(groups[skip:], gv[skip:])])
+                            if labels == 'compact':
+                                label = ', '.join([r] + map(str, gv[skip:]))
+                            elif labels == 'long':
+                                label = ', '.join([r] + ['%s: %s' % _ for _ in zip(groups[skip:], gv[skip:])])
                             # 1) speedup relative to a specimen in the group
                             if speedup_group:
                                 yvals = np.array([lookup(pv, v, *(speedup + gv[len(speedup):]))[r] for v in xvals]) / yvals
