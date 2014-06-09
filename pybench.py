@@ -316,6 +316,7 @@ class Benchmark(object):
         format = kwargs.pop('format', 'svg')
         plotdir = kwargs.pop('plotdir', self.plotdir)
         plotstyle = kwargs.pop('plotstyle', self.result['plotstyle'])
+        linewidth = kwargs.pop('linewidth', 2)
         kinds = kwargs.pop('kinds', 'plot')
         wscale = kwargs.pop('wscale', 0.8)
         bargroups = kwargs.get('bargroups', [''])
@@ -410,7 +411,7 @@ class Benchmark(object):
                                      log=kind == 'barlog')
                                 pylab.xticks(xticks, xvalues or xvals)
                             else:
-                                plot(xvalues or xvals, yvals, label=label,
+                                plot(xvalues or xvals, yvals, label=label, lw=linewidth,
                                      linestyle=linestyles[g % 4], **plotstyle.get(r, {}))
                         except KeyError:
                             raise
