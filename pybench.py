@@ -27,6 +27,29 @@ except ImportError:
     # Assume serial
     rank = 0
 
+html_table = """
+<table>
+  <tr>
+  {%- for p in parameters %}
+    <th>{{ p }}</th>
+  {%- endfor %}
+  {%- for r in regions %}
+    <th>{{ r }}</th>
+  {%- endfor %}
+  </tr>
+{%- for params, v in timings.items() %}
+  <tr>
+  {%- for p in params %}
+    <th>{{ p }}</th>
+  {%- endfor %}
+  {%- for r in regions %}
+    <td>{{ v[r] }}</td>
+  {%- endfor %}
+  </tr>
+{%- endfor %}
+</table>
+"""
+
 
 class Benchmark(object):
     """An abstract base class for benchmarks."""
@@ -64,6 +87,7 @@ class Benchmark(object):
         self.plotdir = path.join(self.basedir, 'plots')
         self.profiledir = path.join(self.basedir, 'profiles')
         self.resultsdir = path.join(self.basedir, 'results')
+        self.tabledir = path.join(self.basedir, 'tables')
         self.name = getattr(self, 'name', self.__class__.__name__)
         if self.series:
             suff = '_'.join('%s%s' % (k, v) for k, v in self.series.items())
@@ -299,6 +323,25 @@ class Benchmark(object):
         result['timings'] = timings
         self.result = result
         return result
+
+    def table(self, **kwargs):
+        filename = kwargs.pop('filename', self.result['name'])
+        params = kwargs.pop('params', self.result['params'])
+        tabledir = kwargs.pop('tabledir', self.tabledir)
+        regions = kwargs.pop('regions', self.result['regions'])
+        timings = kwargs.pop('timings', self.result['timings'])
+        formats = kwargs.pop('format', 'html').split(',')
+        if not path.exists(tabledir):
+            makedirs(tabledir)
+        pkeys, pvals = zip(*params)
+
+        from jinja2 import Template
+        templates = {'html': html_table}
+
+        d = {'parameters': pkeys, 'timings': timings, 'regions': regions}
+        for fmt in formats:
+            with open(path.join(tabledir, "%s.%s" % (filename, fmt)), 'w') as f:
+                f.write(Template(templates[fmt]).render(d))
 
     def plot(self, xaxis, **kwargs):
         if rank > 0:
