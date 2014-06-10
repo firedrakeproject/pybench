@@ -52,10 +52,10 @@ html_table = """
 
 tex_table = """
 \\begin{tabulary}{\\textwidth}{%{- for _ in parameters %}C%{- endfor %}%{- for _ in regions %}C%{- endfor %}}
-  %{{ parameters|join(' & ') %}} & %{{ regions|join(' & ') %}} \\\\
+  %{{ parameters|map('bold')|join(' & ') %}} & %{{ regions|map('bold')|join(' & ') %}} \\\\
   \\hline
 %{- for params, v in timings.items() %}
-  %{{ params|join(' & ') %}} %{- for r in regions %} & %{{ v[r]|round(4) %}} %{- endfor %} \\\\
+  %{{ params|map('bold')|join(' & ') %}} %{- for r in regions %} & %{{ v[r]|round(4) %}} %{- endfor %} \\\\
 %{- endfor %}
 \\end{tabulary}
 """
@@ -346,11 +346,16 @@ class Benchmark(object):
         pkeys, pvals = zip(*params)
 
         from jinja2 import Environment, Template
+
+        def texbold(value):
+            return '\\textbf{%s}' % value
+        texenv = Environment(block_start_string='%{',
+                             block_end_string='%}',
+                             variable_start_string='%{{',
+                             variable_end_string='%}}')
+        texenv.filters['bold'] = texbold
         templates = {'html': Template(html_table),
-                     'tex': Environment(block_start_string='%{',
-                                        block_end_string='%}',
-                                        variable_start_string='%{{',
-                                        variable_end_string='%}}').from_string(tex_table)}
+                     'tex': texenv.from_string(tex_table)}
 
         d = {'parameters': pkeys, 'timings': timings, 'regions': regions}
         for fmt in formats:
