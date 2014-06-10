@@ -51,7 +51,7 @@ html_table = """
 """
 
 tex_table = """
-\\begin{tabulary}{\\textwidth}{%{- for _ in parameters %}C%{- endfor %}%{- for _ in regions %}C%{- endfor %}}
+\\begin{tabulary}{\\textwidth}{%{- for _ in parameters %}C%{- endfor %}|%{- for _ in regions %}C%{- endfor %}}
   %{{ parameters|map('bold')|join(' & ') %}} & %{{ regions|map('bold')|join(' & ') %}} \\\\
   \\hline
 %{- for params, vals in timings %}
