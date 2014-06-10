@@ -37,13 +37,13 @@ html_table = """
     <th>{{ r }}</th>
   {%- endfor %}
   </tr>
-{%- for params, v in timings.items() %}
+{%- for params, vals in timings %}
   <tr>
   {%- for p in params %}
     <th>{{ p }}</th>
   {%- endfor %}
-  {%- for r in regions %}
-    <td>{{ v[r]|round(4) }}</td>
+  {%- for v in vals %}
+    <td>{{ v|round(4) }}</td>
   {%- endfor %}
   </tr>
 {%- endfor %}
@@ -54,8 +54,8 @@ tex_table = """
 \\begin{tabulary}{\\textwidth}{%{- for _ in parameters %}C%{- endfor %}%{- for _ in regions %}C%{- endfor %}}
   %{{ parameters|map('bold')|join(' & ') %}} & %{{ regions|map('bold')|join(' & ') %}} \\\\
   \\hline
-%{- for params, v in timings.items() %}
-  %{{ params|map('bold')|join(' & ') %}} %{- for r in regions %} & %{{ v[r]|round(4) %}} %{- endfor %} \\\\
+%{- for params, vals in timings %}
+  %{{ params|map('bold')|join(' & ') %}} & %{{ vals|map('round', 4)|join(' & ') %}} \\\\
 %{- endfor %}
 \\end{tabulary}
 """
@@ -340,10 +340,16 @@ class Benchmark(object):
         tabledir = kwargs.pop('tabledir', self.tabledir)
         regions = kwargs.pop('regions', self.result['regions'])
         timings = kwargs.pop('timings', self.result['timings'])
+        skip = kwargs.pop('skip', [])
         formats = kwargs.pop('format', 'html').split(',')
         if not path.exists(tabledir):
             makedirs(tabledir)
+
         pkeys, pvals = zip(*params)
+        idx = [pkeys.index(s) for s in skip]
+        times = [(tuple(p for i, p in enumerate(pv) if i not in idx),
+                  tuple(timings[pv][r] for r in regions))
+                 for pv in product(*pvals)]
 
         from jinja2 import Environment, Template
 
@@ -357,7 +363,9 @@ class Benchmark(object):
         templates = {'html': Template(html_table),
                      'tex': texenv.from_string(tex_table)}
 
-        d = {'parameters': pkeys, 'timings': timings, 'regions': regions}
+        d = {'parameters': [p for p in pkeys if p not in skip],
+             'timings': times,
+             'regions': regions}
         for fmt in formats:
             with open(path.join(tabledir, "%s.%s" % (filename, fmt)), 'w') as f:
                 f.write(templates[fmt].render(d))
