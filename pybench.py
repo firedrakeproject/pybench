@@ -43,7 +43,7 @@ html_table = """
     <th>{{ p }}</th>
   {%- endfor %}
   {%- for r in regions %}
-    <td>{{ v[r] }}</td>
+    <td>{{ v[r]|round(4) }}</td>
   {%- endfor %}
   </tr>
 {%- endfor %}
@@ -55,7 +55,7 @@ tex_table = """
   %{{ parameters|join(' & ') %}} & %{{ regions|join(' & ') %}} \\\\
   \\hline
 %{- for params, v in timings.items() %}
-  %{{ params|join(' & ') %}} %{- for r in regions %} & %{{ v[r] %}} %{- endfor %} \\\\
+  %{{ params|join(' & ') %}} %{- for r in regions %} & %{{ v[r]|round(4) %}} %{- endfor %} \\\\
 %{- endfor %}
 \\end{tabulary}
 """
