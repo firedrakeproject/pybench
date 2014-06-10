@@ -50,6 +50,16 @@ html_table = """
 </table>
 """
 
+tex_table = """
+\\begin{tabulary}{\\textwidth}{%{- for _ in parameters %}C%{- endfor %}%{- for _ in regions %}C%{- endfor %}}
+  %{{ parameters|join(' & ') %}} & %{{ regions|join(' & ') %}} \\\\
+  \\hline
+%{- for params, v in timings.items() %}
+  %{{ params|join(' & ') %}} %{- for r in regions %} & %{{ v[r] %}} %{- endfor %} \\\\
+%{- endfor %}
+\\end{tabulary}
+"""
+
 
 class Benchmark(object):
     """An abstract base class for benchmarks."""
@@ -335,13 +345,17 @@ class Benchmark(object):
             makedirs(tabledir)
         pkeys, pvals = zip(*params)
 
-        from jinja2 import Template
-        templates = {'html': html_table}
+        from jinja2 import Environment, Template
+        templates = {'html': Template(html_table),
+                     'tex': Environment(block_start_string='%{',
+                                        block_end_string='%}',
+                                        variable_start_string='%{{',
+                                        variable_end_string='%}}').from_string(tex_table)}
 
         d = {'parameters': pkeys, 'timings': timings, 'regions': regions}
         for fmt in formats:
             with open(path.join(tabledir, "%s.%s" % (filename, fmt)), 'w') as f:
-                f.write(Template(templates[fmt]).render(d))
+                f.write(templates[fmt].render(d))
 
     def plot(self, xaxis, **kwargs):
         if rank > 0:
