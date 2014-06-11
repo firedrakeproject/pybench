@@ -514,7 +514,7 @@ class Benchmark(object):
                         fname = '%s_%s_%s.%s' % (figname, kind, fsuff, fmt)
                         pylab.savefig(path.join(plotdir, fname),
                                       orientation='landscape', format=fmt,
-                                      transparent=True)
+                                      transparent=True, bbox_inches='tight')
                         if fmt in ['svg', 'png']:
                             outline += ['<td><img src="%s"></td>' % fname]
                 pylab.close(fig)
