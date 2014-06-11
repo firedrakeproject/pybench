@@ -504,7 +504,7 @@ class Benchmark(object):
                 pylab.ylabel(ylabel)
                 if title == self.name:
                     pylab.title(title + ': ' + tsuff)
-                else:
+                elif title:
                     pylab.title(title % pdict)
                 pylab.grid()
                 if not format:
