@@ -515,7 +515,8 @@ class Benchmark(object):
                         pylab.savefig(path.join(plotdir, fname),
                                       orientation='landscape', format=fmt,
                                       transparent=True)
-                        outline += ['<td><img src="%s"></td>' % fname]
+                        if fmt in ['svg', 'png']:
+                            outline += ['<td><img src="%s"></td>' % fname]
                 pylab.close(fig)
             outline += ['</tr>']
             fname = '%s_%s_%s%s.html' % (figname, xaxis, '_'.join(groups), '_speedup' if speedup else '')
