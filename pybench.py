@@ -380,6 +380,7 @@ class Benchmark(object):
         xlabel = kwargs.pop('xlabel', xaxis)
         xvalues = kwargs.pop('xvalues', None)
         ylabel = kwargs.pop('ylabel', 'time [sec]')
+        xtickbins = kwargs.get('xtickbins')
         regions = kwargs.pop('regions', self.result['regions'])
         groups = kwargs.get('groups', [])
         title = kwargs.pop('title', self.name)
@@ -516,6 +517,8 @@ class Benchmark(object):
                             else:
                                 line, = plot(xvalues or xvals, yvals, label=label, lw=linewidth,
                                              linestyle=linestyles[g % 4], **plotstyle.get(r, {}))
+                                if xtickbins and kind == 'plot':
+                                    ax.locator_params(axis='x', nbins=xtickbins)
                                 if subplot:
                                     ax.axis('tight')
                                     xmin, xmax, ymin, ymax = ax.axis()
