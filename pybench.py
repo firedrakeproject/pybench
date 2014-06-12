@@ -515,6 +515,10 @@ class Benchmark(object):
                             else:
                                 line, = plot(xvalues or xvals, yvals, label=label, lw=linewidth,
                                              linestyle=linestyles[g % 4], **plotstyle.get(r, {}))
+                                if subplot:
+                                    ax.axis('tight')
+                                    xmin, xmax, ymin, ymax = ax.axis()
+                                    ax.axis([xmin * .9, xmax * 1.1, ymin * 0.9, ymax * 1.1])
                         except KeyError:
                             raise
                         i += 1
