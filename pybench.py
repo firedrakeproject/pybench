@@ -390,6 +390,7 @@ class Benchmark(object):
         plotstyle = kwargs.pop('plotstyle', self.result['plotstyle'])
         linewidth = kwargs.pop('linewidth', 2)
         kinds = kwargs.pop('kinds', 'plot')
+        subplot = kwargs.get('subplot')
         wscale = kwargs.pop('wscale', 0.8)
         bargroups = kwargs.get('bargroups', [''])
         # A tuple of either the same length as groups (speedup relative to a
@@ -434,7 +435,27 @@ class Benchmark(object):
         offset = np.arange(len(xvals)) + 0.1
         xticks = np.arange(len(xvals)) + 0.5
         outline = []
-        for pv in product(*pvals):
+        nv = len(list(product(*pvals)))
+        if subplot:
+            figs = {kind: {'fig': pylab.figure(figname + '_' + kind, figsize=(9, 6), dpi=300),
+                           'lines': [],
+                           'labels': [],
+                           'ax': []} for kind in kinds.split(',')}
+
+        def save(fig, fname):
+            if not format:
+                fig.show()
+            else:
+                for fmt in format.split(','):
+                    fname += '.' + fmt
+                    fig.savefig(path.join(plotdir, fname),
+                                orientation='landscape', format=fmt,
+                                transparent=True, bbox_inches='tight')
+                    if fmt in ['svg', 'png']:
+                        outline += ['<td><img src="%s"></td>' % fname]
+            pylab.close(fig)
+
+        for p, pv in enumerate(product(*pvals), 1):
             pdict = dict(zip(pkeys, pv))
             fsuff = '_'.join('%s%s' % (k, v) for k, v in zip(pkeys, pv))
             if speedup:
@@ -442,8 +463,13 @@ class Benchmark(object):
             tsuff = ', '.join('%s=%s' % (k, v) for k, v in zip(pkeys, pv))
             outline += ['<tr>']
             for kind in kinds.split(','):
-                fig = pylab.figure(figname + '_' + fsuff, figsize=(9, 6), dpi=300)
-                ax = pylab.subplot(111)
+                if subplot:
+                    fig = figs[kind]['fig']
+                    ax = fig.add_subplot(1, nv, p, sharey=(figs[kind]['ax'][p-2] if p > 1 else None))
+                    figs[kind]['ax'].append(ax)
+                else:
+                    fig = pylab.figure(figname + '_' + fsuff, figsize=(9, 6), dpi=300)
+                    ax = fig.add_subplot(111)
                 if kind == 'barstacked':
                     ystack = [np.zeros_like(xvals, dtype=np.float) for _ in bargroups]
                 plot = {'bar': ax.bar,
@@ -475,53 +501,57 @@ class Benchmark(object):
                             if transform:
                                 yvals = transform(xvals, yvals)
                             if kind in ['barstacked', 'barstackedlog']:
-                                plot(offset + group(r) * w, yvals, w,
-                                     bottom=ystack[group(r)], label=label,
-                                     color=colors[ir], hatch=fillstyles[g % 4],
-                                     log=kind == 'barstackedlog')
+                                line = plot(offset + group(r) * w, yvals, w,
+                                            bottom=ystack[group(r)], label=label,
+                                            color=colors[ir], hatch=fillstyles[g % 4],
+                                            log=kind == 'barstackedlog')
                                 ax.set_xticks(xticks, xvalues or xvals)
                                 ystack[group(r)] += yvals
                             elif kind in ['bar', 'barlog']:
-                                plot(offset + i * w, yvals, w, label=label,
-                                     color=colors[ir], hatch=fillstyles[g % 4],
-                                     log=kind == 'barlog')
+                                line = plot(offset + i * w, yvals, w, label=label,
+                                            color=colors[ir], hatch=fillstyles[g % 4],
+                                            log=kind == 'barlog')
                                 ax.set_xticks(xticks, xvalues or xvals)
                             else:
-                                plot(xvalues or xvals, yvals, label=label, lw=linewidth,
-                                     linestyle=linestyles[g % 4], **plotstyle.get(r, {}))
+                                line, = plot(xvalues or xvals, yvals, label=label, lw=linewidth,
+                                             linestyle=linestyles[g % 4], **plotstyle.get(r, {}))
                         except KeyError:
                             raise
                         i += 1
-                if legend.get('loc') == 'center left':
+                        if subplot and p == 1:
+                            figs[kind]['lines'].append(line)
+                            figs[kind]['labels'].append(label)
+                if not subplot and legend.get('loc') == 'center left':
                     # Shink current axis by 20%
                     box = ax.get_position()
                     ax.set_position([box.x0, box.y0, box.width * wscale, box.height])
                     # Put a legend to the right of the current axis
                     ax.legend(bbox_to_anchor=(1, 0.5), prop=fontP, **legend)
-                else:
+                elif not subplot:
                     ax.legend(prop=fontP, **legend)
                 ax.set_xlabel(xlabel)
-                ax.set_ylabel(ylabel)
+                if not subplot or p == 1:
+                    ax.set_ylabel(ylabel)
                 if title == self.name:
                     ax.set_title(title + ': ' + tsuff)
                 elif title:
                     ax.set_title(title % pdict)
                 ax.grid()
-                if not format:
-                    fig.show()
-                else:
-                    for fmt in format.split(','):
-                        fname = '%s_%s_%s.%s' % (figname, kind, fsuff, fmt)
-                        fig.savefig(path.join(plotdir, fname),
-                                    orientation='landscape', format=fmt,
-                                    transparent=True, bbox_inches='tight')
-                        if fmt in ['svg', 'png']:
-                            outline += ['<td><img src="%s"></td>' % fname]
-                pylab.close(fig)
+                if not subplot:
+                    save(fig, '%s_%s_%s' % (figname, kind, fsuff))
             outline += ['</tr>']
-            fname = '%s_%s_%s%s.html' % (figname, xaxis, '_'.join(groups), '_speedup' if speedup else '')
-            with open(path.join(plotdir, fname), 'w') as f:
-                f.write('\n'.join(outline))
+        fname = '%s_%s_%s%s.html' % (figname, xaxis, '_'.join(groups), '_speedup' if speedup else '')
+        with open(path.join(plotdir, fname), 'w') as f:
+            f.write('\n'.join(outline))
+        if subplot:
+            for kind in kinds.split(','):
+                fig = figs[kind]['fig']
+                # Remove space between subplots
+                fig.subplots_adjust(wspace=0)
+                # Hide y ticks for all but left plot
+                pylab.setp([a.get_yticklabels() for a in fig.axes[1:]], visible=False)
+                fig.legend(figs[kind]['lines'], figs[kind]['labels'], prop=fontP, **legend)
+                save(fig, '%s_%s' % (figname, kind))
 
     def archive(self, dirname=None):
         timestamp = datetime.now().strftime('%Y-%m-%dT%H%M%S')
