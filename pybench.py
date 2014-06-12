@@ -479,13 +479,13 @@ class Benchmark(object):
                                      bottom=ystack[group(r)], label=label,
                                      color=colors[ir], hatch=fillstyles[g % 4],
                                      log=kind == 'barstackedlog')
-                                pylab.xticks(xticks, xvalues or xvals)
+                                ax.set_xticks(xticks, xvalues or xvals)
                                 ystack[group(r)] += yvals
                             elif kind in ['bar', 'barlog']:
                                 plot(offset + i * w, yvals, w, label=label,
                                      color=colors[ir], hatch=fillstyles[g % 4],
                                      log=kind == 'barlog')
-                                pylab.xticks(xticks, xvalues or xvals)
+                                ax.set_xticks(xticks, xvalues or xvals)
                             else:
                                 plot(xvalues or xvals, yvals, label=label, lw=linewidth,
                                      linestyle=linestyles[g % 4], **plotstyle.get(r, {}))
@@ -500,21 +500,21 @@ class Benchmark(object):
                     ax.legend(bbox_to_anchor=(1, 0.5), prop=fontP, **legend)
                 else:
                     ax.legend(prop=fontP, **legend)
-                pylab.xlabel(xlabel)
-                pylab.ylabel(ylabel)
+                ax.set_xlabel(xlabel)
+                ax.set_ylabel(ylabel)
                 if title == self.name:
-                    pylab.title(title + ': ' + tsuff)
+                    ax.set_title(title + ': ' + tsuff)
                 elif title:
-                    pylab.title(title % pdict)
-                pylab.grid()
+                    ax.set_title(title % pdict)
+                ax.grid()
                 if not format:
-                    pylab.show()
+                    fig.show()
                 else:
                     for fmt in format.split(','):
                         fname = '%s_%s_%s.%s' % (figname, kind, fsuff, fmt)
-                        pylab.savefig(path.join(plotdir, fname),
-                                      orientation='landscape', format=fmt,
-                                      transparent=True, bbox_inches='tight')
+                        fig.savefig(path.join(plotdir, fname),
+                                    orientation='landscape', format=fmt,
+                                    transparent=True, bbox_inches='tight')
                         if fmt in ['svg', 'png']:
                             outline += ['<td><img src="%s"></td>' % fname]
                 pylab.close(fig)
