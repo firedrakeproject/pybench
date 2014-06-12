@@ -17,8 +17,8 @@ mpl.use("Agg")
 from matplotlib.font_manager import FontProperties
 fontP = FontProperties()
 fontP.set_size('small')
+import matplotlib.pyplot as plt
 import numpy as np
-import pylab
 
 try:
     from mpi4py import MPI
@@ -437,7 +437,7 @@ class Benchmark(object):
         outline = []
         nv = len(list(product(*pvals)))
         if subplot:
-            figs = {kind: {'fig': pylab.figure(figname + '_' + kind, figsize=(9, 6), dpi=300),
+            figs = {kind: {'fig': plt.figure(figname + '_' + kind, figsize=(9, 6), dpi=300),
                            'lines': [],
                            'labels': [],
                            'ax': []} for kind in kinds.split(',')}
@@ -453,7 +453,7 @@ class Benchmark(object):
                                 transparent=True, bbox_inches='tight')
                     if fmt in ['svg', 'png']:
                         outline += ['<td><img src="%s"></td>' % fname]
-            pylab.close(fig)
+            plt.close(fig)
 
         for p, pv in enumerate(product(*pvals), 1):
             pdict = dict(zip(pkeys, pv))
@@ -468,7 +468,7 @@ class Benchmark(object):
                     ax = fig.add_subplot(1, nv, p, sharey=(figs[kind]['ax'][p-2] if p > 1 else None))
                     figs[kind]['ax'].append(ax)
                 else:
-                    fig = pylab.figure(figname + '_' + fsuff, figsize=(9, 6), dpi=300)
+                    fig = plt.figure(figname + '_' + fsuff, figsize=(9, 6), dpi=300)
                     ax = fig.add_subplot(111)
                 if kind == 'barstacked':
                     ystack = [np.zeros_like(xvals, dtype=np.float) for _ in bargroups]
@@ -549,7 +549,7 @@ class Benchmark(object):
                 # Remove space between subplots
                 fig.subplots_adjust(wspace=0)
                 # Hide y ticks for all but left plot
-                pylab.setp([a.get_yticklabels() for a in fig.axes[1:]], visible=False)
+                plt.setp([a.get_yticklabels() for a in fig.axes[1:]], visible=False)
                 fig.legend(figs[kind]['lines'], figs[kind]['labels'], prop=fontP, **legend)
                 save(fig, '%s_%s' % (figname, kind))
 
