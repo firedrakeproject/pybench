@@ -488,7 +488,7 @@ class Benchmark(object):
                         try:
                             yvals = np.array([lookup(pv, v, *gv)[r] for v in xvals])
                             # Skip parameters used for speedup when generating label
-                            skip = len(speedup or [])
+                            skip = len(speedup) if speedup_group else 0
                             if labels == 'compact':
                                 label = ', '.join([r] + map(str, gv[skip:]))
                             elif labels == 'long':
