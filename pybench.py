@@ -375,6 +375,7 @@ class Benchmark(object):
             return
         timings = kwargs.pop('timings', self.result['timings'])
         figname = kwargs.pop('figname', self.result['name'])
+        figsize = kwargs.pop('figsize', (9, 6))
         params = kwargs.pop('params', self.result['params'])
         xlabel = kwargs.pop('xlabel', xaxis)
         xvalues = kwargs.pop('xvalues', None)
@@ -437,7 +438,7 @@ class Benchmark(object):
         outline = []
         nv = len(list(product(*pvals)))
         if subplot:
-            figs = {kind: {'fig': plt.figure(figname + '_' + kind, figsize=(9, 6), dpi=300),
+            figs = {kind: {'fig': plt.figure(figname + '_' + kind, figsize=figsize, dpi=300),
                            'lines': [],
                            'labels': [],
                            'ax': []} for kind in kinds.split(',')}
@@ -468,7 +469,7 @@ class Benchmark(object):
                     ax = fig.add_subplot(1, nv, p, sharey=(figs[kind]['ax'][p-2] if p > 1 else None))
                     figs[kind]['ax'].append(ax)
                 else:
-                    fig = plt.figure(figname + '_' + fsuff, figsize=(9, 6), dpi=300)
+                    fig = plt.figure(figname + '_' + fsuff, figsize=figsize, dpi=300)
                     ax = fig.add_subplot(111)
                 if kind == 'barstacked':
                     ystack = [np.zeros_like(xvals, dtype=np.float) for _ in bargroups]
