@@ -459,7 +459,7 @@ class Benchmark(object):
 
         for p, pv in enumerate(product(*pvals), 1):
             pdict = dict(zip(pkeys, pv))
-            fsuff = '_'.join('%s%s' % (k, v) for k, v in zip(pkeys, pv))
+            fsuff = '_'.join('%s%s' % (k, str(v).replace('.', '_')) for k, v in zip(pkeys, pv))
             if speedup:
                 fsuff += '_speedup'
             tsuff = ', '.join('%s=%s' % (k, v) for k, v in zip(pkeys, pv))
