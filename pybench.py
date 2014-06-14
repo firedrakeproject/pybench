@@ -393,7 +393,8 @@ class Benchmark(object):
         linewidth = kwargs.pop('linewidth', 2)
         kinds = kwargs.pop('kinds', 'plot')
         subplot = kwargs.get('subplot')
-        wscale = kwargs.pop('wscale', 0.8)
+        hscale = kwargs.get('hscale')
+        wscale = kwargs.get('wscale')
         bargroups = kwargs.get('bargroups', [''])
         # A tuple of either the same length as groups (speedup relative to a
         # a specimen in the group) or 1 + length of groups (speedup relative to
@@ -529,13 +530,16 @@ class Benchmark(object):
                         if subplot and p == 1:
                             figs[kind]['lines'].append(line)
                             figs[kind]['labels'].append(label)
-                if not subplot and legend.get('loc') == 'center left':
-                    # Shink current axis by 20%
+                # Scale current axis horizontally
+                if wscale:
                     box = ax.get_position()
                     ax.set_position([box.x0, box.y0, box.width * wscale, box.height])
-                    # Put a legend to the right of the current axis
-                    ax.legend(bbox_to_anchor=(1, 0.5), prop=fontP, **legend)
-                elif not subplot:
+                # Scale current axis vertically
+                if hscale:
+                    # Shink current axis
+                    box = ax.get_position()
+                    ax.set_position([box.x0, box.y0, box.width, box.height * hscale])
+                if not subplot:
                     ax.legend(prop=fontP, **legend)
                 ax.set_xlabel(xlabel)
                 if not subplot or p == 1:
