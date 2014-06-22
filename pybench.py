@@ -393,6 +393,7 @@ class Benchmark(object):
         linewidth = kwargs.pop('linewidth', 2)
         kinds = kwargs.pop('kinds', 'plot')
         subplot = kwargs.get('subplot')
+        axis = kwargs.get('axis')
         hscale = kwargs.get('hscale')
         wscale = kwargs.get('wscale')
         bargroups = kwargs.get('bargroups', [''])
@@ -508,19 +509,21 @@ class Benchmark(object):
                                             bottom=ystack[group(r)], label=label,
                                             color=colors[ir], hatch=fillstyles[g % 4],
                                             log=kind == 'barstackedlog')
-                                ax.set_xticks(xticks, xvalues or xvals)
+                                ax.set_xticks(xticks)
+                                ax.set_xticklabels(xvalues or xvals)
                                 ystack[group(r)] += yvals
                             elif kind in ['bar', 'barlog']:
                                 line = plot(offset + i * w, yvals, w, label=label,
                                             color=colors[ir], hatch=fillstyles[g % 4],
                                             log=kind == 'barlog')
-                                ax.set_xticks(xticks, xvalues or xvals)
+                                ax.set_xticks(xticks)
+                                ax.set_xticklabels(xvalues or xvals)
                             else:
                                 line, = plot(xvalues or xvals, yvals, label=label, lw=linewidth,
                                              linestyle=linestyles[g % 4], **plotstyle.get(r, {}))
                                 if xtickbins and kind == 'plot':
                                     ax.locator_params(axis='x', nbins=xtickbins)
-                                if subplot:
+                                if subplot or axis == 'tight':
                                     ax.axis('tight')
                                     xmin, xmax, ymin, ymax = ax.axis()
                                     ax.axis([xmin * .9, xmax * 1.1, ymin * 0.9, ymax * 1.1])
