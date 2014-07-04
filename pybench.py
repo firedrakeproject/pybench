@@ -245,15 +245,15 @@ class Benchmark(object):
         for pvalues in product(*pvals):
             if rank == 0:
                 print 'Benchmark', name, 'for parameters', ', '.join('%s=%s' % (k, v) for k, v in zip(pkeys, pvalues))
-            kargs = dict(zip(pkeys, pvalues))
+            kwargs.update(dict(zip(pkeys, pvalues)))
 
             for _ in range(warmups):
-                method(**kargs)
+                method(**kwargs)
 
             def bench():
                 self.regions = defaultdict(float)
                 with self.timed_region('total'):
-                    method(**kargs)
+                    method(**kwargs)
                 return self.regions
             times = [bench() for _ in range(repeats)]
             # Average over all timed regions
