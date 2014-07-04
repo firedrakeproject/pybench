@@ -195,7 +195,7 @@ class Benchmark(object):
         formats = profilegraph['format'].split(',') if profilegraph else []
         regions = kwargs.pop('regions', self.profileregions)
         out = path.join(profiledir, name)
-        if not path.exists(profiledir):
+        if rank == 0 and not path.exists(profiledir):
             makedirs(profiledir)
         pkeys, pvals = zip(*params)
         for pvalues in product(*pvals):
@@ -272,7 +272,7 @@ class Benchmark(object):
         suffix = suffix or self.suffix
         if filename.endswith(suffix):
             return filename
-        if not path.exists(self.resultsdir):
+        if rank == 0 and not path.exists(self.resultsdir):
             makedirs(self.resultsdir)
         return path.join(self.resultsdir, filename + suffix)
 
@@ -341,6 +341,8 @@ class Benchmark(object):
         return result
 
     def table(self, **kwargs):
+        if rank > 0:
+            return
         filename = kwargs.pop('filename', self.result['name'])
         params = kwargs.pop('params', self.result['params'])
         tabledir = kwargs.pop('tabledir', self.tabledir)
