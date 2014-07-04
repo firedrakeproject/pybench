@@ -446,7 +446,7 @@ class Benchmark(object):
                            'labels': [],
                            'ax': []} for kind in kinds.split(',')}
 
-        def save(fig, fname):
+        def save(fig, fname, outline):
             if not format:
                 fig.show()
             else:
@@ -553,7 +553,7 @@ class Benchmark(object):
                     ax.set_title(title % pdict)
                 ax.grid()
                 if not subplot:
-                    save(fig, '%s_%s_%s' % (figname, kind, fsuff))
+                    save(fig, '%s_%s_%s' % (figname, kind, fsuff), outline)
             outline += ['</tr>']
         fname = '%s_%s_%s%s.html' % (figname, xaxis, '_'.join(groups), '_speedup' if speedup else '')
         with open(path.join(plotdir, fname), 'w') as f:
