@@ -163,11 +163,17 @@ class Benchmark(object):
         return p
 
     def main(self, **kwargs):
-        args = self.parser(**kwargs).parse_args()
+        args, extra = self.parser(**kwargs).parse_known_args()
+        # Any extra arguments are passed on to the method, but need converting
+        # to the right type first
+        f = self.method.im_func
+        defaults = dict(zip(f.func_code.co_varnames[1:f.func_code.co_argcount], f.func_defaults))
+        convert = lambda k, v: (k, type(defaults[k])(v))
+        fargs = dict(convert(*a.split('=')) for a in extra)
         if args.run:
-            self.method()
+            self.method(**fargs)
         if args.benchmark:
-            self.run()
+            self.run(**fargs)
         if args.save or args.save is None:
             self.save(args.save)
         if args.load or args.load is None:
