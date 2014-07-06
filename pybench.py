@@ -206,6 +206,8 @@ class Benchmark(object):
             if rank == 0:
                 print 'Profile', name, 'for parameters', ', '.join('%s=%s' % (k, v) for k, v in zip(pkeys, pvalues))
             kargs = dict(zip(pkeys, pvalues))
+            # Dry run
+            method(**kargs)
             suff = '_'.join('%s%s' % (k, v) for k, v in kargs.items())
             for r in regions:
                 self.profiles[r] = Profile()
