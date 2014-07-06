@@ -98,10 +98,7 @@ class Benchmark(object):
         self.profiledir = path.join(self.basedir, 'profiles')
         self.resultsdir = path.join(self.basedir, 'results')
         self.tabledir = path.join(self.basedir, 'tables')
-        self.name = getattr(self, 'name', self.__class__.__name__)
-        if self.series:
-            suff = '_'.join('%s%s' % (k, v) for k, v in self.series.items())
-            self.name += '_' + suff
+        self.benchmark = getattr(self, 'benchmark', self.__class__.__name__)
         self.description = self.__doc__
         for k, v in kwargs.items():
             setattr(self, k, v)
@@ -109,6 +106,13 @@ class Benchmark(object):
             self.method = getattr(self, self.method, self.method)
         self.regions = defaultdict(float)
         self.profiles = {}
+
+    @property
+    def name(self):
+        if self.series:
+            suff = '_'.join('%s%s' % (k, v) for k, v in self.series.items())
+            return self.benchmark + '_' + suff
+        return self.benchmark
 
     @contextmanager
     def timed_region(self, name, normalize=1.0):
