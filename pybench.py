@@ -340,8 +340,11 @@ class Benchmark(object):
             res = self._read(fname)
             for key in ['description', 'plotstyle', 'meta', 'regions', 'colormap']:
                 result[key] = res[key]
-            for k, v in res['timings'].items():
-                timings[k + svalues] = v
+            if self.params == series:
+                timings[svalues] = res['timings']
+            else:
+                for k, v in res['timings'].items():
+                    timings[k + svalues] = v
         result['timings'] = timings
         self.result = result
         return result
