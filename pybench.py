@@ -242,8 +242,7 @@ class Benchmark(object):
                        'plotstyle': self.plotstyle,
                        'colormap': self.colormap,
                        'meta': self.meta,
-                       'series': self.series,
-                       'timings': timings}
+                       'series': self.series}
         if params:
             pkeys, pvals = zip(*params)
         else:
@@ -271,6 +270,7 @@ class Benchmark(object):
                 timings = times
             # Auto save
             self.save(suffix='.autosave~')
+        self.result['timings'] = timings
         return self.result
 
     def _file(self, filename=None, suffix=None):
