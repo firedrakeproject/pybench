@@ -544,8 +544,8 @@ class Benchmark(object):
                                     ax.axis('tight')
                                     xmin, xmax, ymin, ymax = ax.axis()
                                     ax.axis([xmin * .9, xmax * 1.1, ymin * 0.9, ymax * 1.1])
-                        except KeyError:
-                            raise
+                        except KeyError as e:
+                            print "Parameter combination not found:", e.message
                         i += 1
                         if subplot and p == 1:
                             figs[kind]['lines'].append(line)
