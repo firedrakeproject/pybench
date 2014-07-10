@@ -328,11 +328,24 @@ class Benchmark(object):
         self.result = result
         return result
 
-    def combine_series(self, series, filename=None):
+    def combine_series(self, series, filename=None, merge=False):
         filename = filename or self.name
-        self.params = self.params + series
+        if merge:
+            pkeys, pvals = zip(*self.params)
+            for k, v in series:
+                # The key already exists in the params
+                if k in pkeys:
+                    i = pkeys.index(k)
+                    for p in v:
+                        if p not in pvals[i]:
+                            self.params[i][1].append(p)
+                if k not in pkeys:
+                    self.params.append((k, v))
+        else:
+            self.params = self.params + series
+            pkeys, pvals = zip(*self.params)
         result = {'name': self.name, 'params': self.params}
-        timings = {}
+        timings = self.result['timings'] if hasattr(self, 'result') else {}
         skeys, svals = zip(*series)
         for svalues in product(*svals):
             suff = '_'.join('%s%s' % (k, v) for k, v in zip(skeys, svalues))
@@ -340,7 +353,7 @@ class Benchmark(object):
             res = self._read(fname)
             for key in ['description', 'plotstyle', 'meta', 'regions', 'colormap']:
                 result[key] = res[key]
-            if self.params == series:
+            if pkeys == skeys:
                 timings[svalues] = res['timings']
             else:
                 for k, v in res['timings'].items():
