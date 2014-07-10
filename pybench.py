@@ -427,6 +427,10 @@ class Benchmark(object):
         hscale = kwargs.get('hscale')
         wscale = kwargs.get('wscale')
         bargroups = kwargs.get('bargroups', [''])
+        # Add a baseline to the plot: tuple of parameter value (needs to be part
+        # of groups) and a value along the x-axis, to be plotted along the
+        # entire length of the axis
+        baseline = kwargs.get('baseline')
         # A tuple of either the same length as groups (speedup relative to a
         # a specimen in the group) or 1 + length of groups (speedup relative to
         # a single data point)
@@ -519,7 +523,10 @@ class Benchmark(object):
                 for g, gv in enumerate(product(*gvals)):
                     for ir, r in enumerate(regions):
                         try:
-                            yvals = np.array([lookup(pv, v, *gv)[r] for v in xvals])
+                            if baseline and baseline[0] in gv:
+                                yvals = np.array([lookup(pv, baseline[1], *gv)[r] for _ in xvals])
+                            else:
+                                yvals = np.array([lookup(pv, v, *gv)[r] for v in xvals])
                             # Skip parameters used for speedup when generating label
                             skip = len(speedup) if speedup_group else 0
                             if labels == 'compact':
