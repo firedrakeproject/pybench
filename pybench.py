@@ -603,7 +603,7 @@ class Benchmark(object):
                 # Hide y ticks for all but left plot
                 plt.setp([a.get_yticklabels() for a in fig.axes[1:]], visible=False)
                 fig.legend(figs[kind]['lines'], figs[kind]['labels'], prop=fontP, **legend)
-                save(fig, '%s_%s' % (figname, kind))
+                save(fig, '%s_%s' % (figname, kind), outline)
 
     def archive(self, dirname=None):
         timestamp = datetime.now().strftime('%Y-%m-%dT%H%M%S')
