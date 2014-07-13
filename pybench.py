@@ -456,14 +456,17 @@ class Benchmark(object):
         xvals = pvals[idx[0]]
         gvals = [pvals[i] for i in idx[1:]]
         pvals = [p for i, p in enumerate(pvals) if i not in idx]
-        colors = [cmap(i) for i in np.linspace(0, 0.9, len(regions))]
+        nregions = len(regions)
+        ngroups = int(np.prod([len(g) for g in gvals]))
+        # Colour by region or group, whichever there are more of
+        colors = [cmap(i) for i in np.linspace(0, 0.9, max(nregions, ngroups))]
         mpl.rcParams['axes.color_cycle'] = colors
         speedup_group = speedup and len(speedup) <= len(gvals)
         speedup_single = speedup and len(speedup) == len(gvals) + 1
         if speedup_group:
             for i, s in enumerate(speedup):
                 gvals[i] = filter(lambda x: x != s, gvals[i])
-        nlines = len(regions) * int(np.prod([len(g) for g in gvals]))
+        nlines = nregions * ngroups
 
         def lookup(pv, *args):
             for i, a in sorted(zip(idx, args)):
@@ -529,10 +532,11 @@ class Benchmark(object):
                                 yvals = np.array([lookup(pv, v, *gv)[r] for v in xvals])
                             # Skip parameters used for speedup when generating label
                             skip = len(speedup) if speedup_group else 0
+                            rlabel = [] if nregions == 1 else [r]
                             if labels == 'compact':
-                                label = ', '.join([r] + map(str, gv[skip:]))
+                                label = ', '.join(rlabel + map(str, gv[skip:]))
                             elif labels == 'long':
-                                label = ', '.join([r] + ['%s: %s' % _ for _ in zip(groups[skip:], gv[skip:])])
+                                label = ', '.join(rlabel + ['%s: %s' % _ for _ in zip(groups[skip:], gv[skip:])])
                             # 1) speedup relative to a specimen in the group
                             if speedup_group:
                                 yvals = np.array([lookup(pv, v, *(speedup + gv[len(speedup):]))[r] for v in xvals]) / yvals
@@ -557,7 +561,8 @@ class Benchmark(object):
                                 ax.set_xticklabels(xvalues or xvals)
                             else:
                                 line, = plot(xvalues or xvals, yvals, label=label, lw=linewidth,
-                                             linestyle=linestyles[g % 4], **plotstyle.get(r, {}))
+                                             linestyle=linestyles[(g if nregions > ngroups else ir) % 4],
+                                             **plotstyle.get(r, {}))
                                 if xtickbins and kind == 'plot':
                                     ax.locator_params(axis='x', nbins=xtickbins)
                                 if subplot or axis == 'tight':
