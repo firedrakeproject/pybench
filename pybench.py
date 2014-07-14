@@ -560,9 +560,12 @@ class Benchmark(object):
                                 ax.set_xticks(xticks)
                                 ax.set_xticklabels(xvalues or xvals)
                             else:
-                                line, = plot(xvalues or xvals, yvals, label=label, lw=linewidth,
-                                             linestyle=linestyles[(g if nregions > ngroups else ir) % 4],
-                                             **plotstyle.get(r, {}))
+                                if baseline and baseline[0] in gv:
+                                    line, = plot(xvalues or xvals, yvals, label=label, lw=linewidth, color='k')
+                                else:
+                                    line, = plot(xvalues or xvals, yvals, label=label, lw=linewidth,
+                                                 linestyle=linestyles[(g if nregions > ngroups else ir) % 4],
+                                                 **plotstyle.get(r, {}))
                                 if xtickbins and kind == 'plot':
                                     ax.locator_params(axis='x', nbins=xtickbins)
                                 if subplot or axis == 'tight':
