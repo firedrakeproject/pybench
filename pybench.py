@@ -537,6 +537,8 @@ class Benchmark(object):
                                 label = ', '.join(rlabel + map(str, gv[skip:]))
                             elif labels == 'long':
                                 label = ', '.join(rlabel + ['%s: %s' % _ for _ in zip(groups[skip:], gv[skip:])])
+                            elif isinstance(labels, dict):
+                                label = labels[gv]
                             # 1) speedup relative to a specimen in the group
                             if speedup_group:
                                 yvals = np.array([lookup(pv, v, *(speedup + gv[len(speedup):]))[r] for v in xvals]) / yvals
