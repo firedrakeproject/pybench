@@ -466,7 +466,6 @@ class Benchmark(object):
         if speedup_group:
             for i, s in enumerate(speedup):
                 gvals[i] = filter(lambda x: x != s, gvals[i])
-        nlines = nregions * ngroups
 
         def lookup(pv, *args):
             for i, a in sorted(zip(idx, args)):
@@ -521,7 +520,10 @@ class Benchmark(object):
                         'semilogx': ax.semilogx,
                         'semilogy': ax.semilogy,
                         'loglog': ax.loglog}[kind]
-                w = 0.8 / nlines if kind in ['bar', 'barlog'] else len(bargroups)
+                if kind in ['bar', 'barlog']:
+                    w = (2*len(speedup) if speedup_group else 1) * 0.8 / (nregions * ngroups)
+                else:
+                    w = 0.8 / len(bargroups)
                 i = 0
                 for g, gv in enumerate(product(*gvals)):
                     for ir, r in enumerate(regions):
