@@ -64,7 +64,8 @@ tex_table = """
 class Benchmark(object):
     """An abstract base class for benchmarks."""
     params = []
-    """The parameters to run the benchmark for, a list of tuples."""
+    """The parameters to run the benchmark for: a list of pairs, each of which
+    is the parameter name and a list of benchmark values."""
     repeats = 3
     """How often to repeat each benchmark."""
     warmups = 1
@@ -76,12 +77,16 @@ class Benchmark(object):
     timer = time.time
     """The timer to use."""
     plotstyle = {}
-    """The plot style to use for each timed region (a nested dictionary with a
-    key per region and a dictionary of plot options as the value)."""
+    """The plot style to use for each timed region: a nested dictionary with a
+    key per region and a dictionary of plot options as the value. These are
+    passed straight to the matplotlib plot function."""
     colormap = 'Set2'
     """The matplotlib colormap to cycle through."""
     profilegraph = {}
-    """Options for creating the profile graph with gprof2dot."""
+    """Options for creating the profile graph with gprof2dot:
+        * node_threshold: eliminate nodes below this threshold
+        * edge_threshold: eliminate edges below this threshold
+        * format: comma-separated list of output formats (supported by dot)"""
     profileregions = ['total']
     """Regions to create profile graphs for."""
     meta = {}
@@ -93,6 +98,7 @@ class Benchmark(object):
     """Suffix for the result file to write."""
 
     def __init__(self, **kwargs):
+        """:param kwargs: set as attributes on the instance"""
         self.basedir = path.dirname(getfile(self.__class__))
         self.plotdir = path.join(self.basedir, 'plots')
         self.profiledir = path.join(self.basedir, 'profiles')
@@ -109,6 +115,8 @@ class Benchmark(object):
 
     @property
     def name(self):
+        """Benchmark name: produced by concatenating the benchmark attribute
+        with all keys and values in the series."""
         if self.series:
             suff = '_'.join('%s%s' % (k, v) for k, v in self.series.items())
             return self.benchmark + '_' + suff
@@ -116,6 +124,7 @@ class Benchmark(object):
 
     @contextmanager
     def timed_region(self, name, normalize=1.0):
+        """A context manger for timing a region of code identified by name."""
         if name in self.profiles:
             self.profiles[name].enable()
         t_ = self.timer()
@@ -125,9 +134,11 @@ class Benchmark(object):
             self.profiles[name].disable()
 
     def register_timing(self, name, value):
+        """Register the timing `value` for the region identified by `name`."""
         self.regions[name] += value
 
     def _args(self, kwargs):
+        """Parse name, params and method from the kwargs dictionary."""
         name = kwargs.pop('name', self.name)
         params = kwargs.pop('params', self.params)
         method = kwargs.pop('method', self.method)
@@ -136,6 +147,15 @@ class Benchmark(object):
         return name, params, method
 
     def parser(self, **kwargs):
+        """Return an argument parser, where default values can we overridden
+        through `kwargs`:
+        * run: defaults to False
+        * benchmark: defaults to False
+        * save: defaults to False
+        * combine: defaults to None
+        * plot: defaults to None
+        * profile: defaults to False
+        """
         msg = ' (uses the default file name if no file is given)'
         if kwargs:
             epilog = 'The following defaults are used if not overridden:'
@@ -167,6 +187,10 @@ class Benchmark(object):
         return p
 
     def main(self, **kwargs):
+        """Main driver method: parses command line arguments and calls methods
+        accordingly.
+
+        :param kwargs: any keyword arguments are forwarded to the parser"""
         args, extra = self.parser(**kwargs).parse_known_args()
         # Any extra arguments are passed on to the method, but need converting
         # to the right type first
@@ -191,6 +215,16 @@ class Benchmark(object):
             self.profile()
 
     def profile(self, **kwargs):
+        """Create a profile for the given benchmark.
+
+        :param kwargs: keyword arguments override global attributes:
+            * name: benchmark name
+            * params: benchmark parameters
+            * method: method to benchmark
+            * profiledir: directory to write profiles to
+            * profilegraph: options passed to gprof2dot
+            * regions: regions to profile
+        """
         name, params, method = self._args(kwargs)
         profiledir = kwargs.pop('profiledir', self.profiledir)
         profilegraph = kwargs.pop('profilegraph', self.profilegraph)
@@ -224,6 +258,18 @@ class Benchmark(object):
                         call(cmd % (n, e, statfile, fmt, statfile, fmt), shell=True)
 
     def run(self, **kwargs):
+        """Run the benchmark.
+
+        :param kwargs: keyword arguments override global attributes:
+            * name: benchmark name
+            * params: benchmark parameters
+            * method: method to benchmark
+            * description: benchmark description
+            * repeats: how often to repeat the benchmark
+            * warmups: how many dry run to perform
+            * average: method used to average the repeated runs
+            * all remaining keyword arguments are passed to the method
+        """
         name, params, method = self._args(kwargs)
         description = kwargs.pop('description', self.description)
         repeats = kwargs.pop('repeats', self.repeats)
@@ -274,6 +320,8 @@ class Benchmark(object):
         return self.result
 
     def _file(self, filename=None, suffix=None):
+        """Return a filepath specified by given `filename` and `suffix`, which
+        default to the global name and suffix attributes if not given."""
         filename = filename or self.name
         suffix = suffix or self.suffix
         if filename.endswith(suffix):
@@ -283,14 +331,21 @@ class Benchmark(object):
         return path.join(self.resultsdir, filename + suffix)
 
     def _read(self, filename=None, suffix=None):
+        """Read a file specified by given `filename` and `suffix`, which
+        default to the global name and suffix attributes if not given, and
+        evaluate its contents."""
         with open(self._file(filename, suffix)) as f:
             return eval(f.read())
 
     def load(self, filename=None, suffix=None):
+        """Load results from a file specified by given `filename` and `suffix`,
+        which default to the global name and suffix attributes if not given."""
         self.result = self._read(filename)
         return self.result
 
     def save(self, filename=None, suffix=None):
+        """Save results to a file specified by given `filename` and `suffix`,
+        which default to the global name and suffix attributes if not given."""
         if rank > 0:
             return
         if path.exists(self._file(filename, '.autosave~')):
@@ -302,6 +357,8 @@ class Benchmark(object):
             pprint(self.result, f)
 
     def combine(self, files):
+        """Combine results given by the dictionary `files`, with file names as
+        keys and prefixes as values. The prefix is prepended to the regions."""
         result = {'name': self.name, 'series': self.series}
         plotstyle = {}
         timings = defaultdict(dict)
@@ -329,6 +386,16 @@ class Benchmark(object):
         return result
 
     def combine_series(self, series, filename=None, merge=False):
+        """Combine the results of one or more series of benchmarks.
+
+        :param series: a dictionary with the series names as keys and the list
+            of values defing the series as value.
+        :param filename: the basename for the files to combine (defaults to the
+            global name property if not given)
+        :param merge: if set to `True`, the given series is merged with the
+            existing parameter values. The default setting of `False` assumes
+            that all series are added as new parameters.
+        """
         filename = filename or self.name
         if merge:
             pkeys, pvals = zip(*self.params)
@@ -363,6 +430,17 @@ class Benchmark(object):
         return result
 
     def table(self, **kwargs):
+        """Export results as html or latex table.
+
+        :param kwargs: keyword arguments override values given in the results
+            * filename: base name of output file
+            * params: benchmark parameters
+            * tabledir: output directory
+            * regions: regions to output
+            * timings: benchmark timings
+            * skip: parameters to skip
+            * format: comma-separated list of output formats (html, latex, both)
+        """
         if rank > 0:
             return
         filename = kwargs.pop('filename', self.result['name'])
@@ -401,6 +479,60 @@ class Benchmark(object):
                 f.write(templates[fmt].render(d))
 
     def plot(self, xaxis, **kwargs):
+        """Plot results.
+
+        :param xaxis: the parameter to plot on the x-axis
+        :param kwargs: keyword arguments override values given in the results
+            * timings: benchmark timings
+            * figname: base name of output file
+            * figsize: figure size (defaults to (9, 6))
+            * params: benchmark parameters
+            * xlabel: x-axis label (defaults to the value of `xaxis`)
+            * xvalues: values to use for x tick labels (defaults to the
+                parameter values selected through `xaxis`)
+            * ylabel: y-axis label (defaults to "time [sec]")
+            * xtickbins: number of bins to
+            * regions: regions to plot
+            * groups: list of parameters to group (group parameters will be
+                shown in the same plot rather than creating multiple plots)
+            * title: plot title (defaults to the name property)
+            * labels: either a dictionary of one label per group or "compact",
+                to generate short labels with only the parameter values, or
+                "long", which includes parameter names and values
+            * legend: dictionary of legend options, passed as keyword argument
+                to the matplotlib legend function
+            * format: comma-separated list of output formats (defaults to svg)
+            * plotdir: output directory
+            * plotstyle: plot style to use for each timed region (nested
+                dictionary with a key per region and a dictionary of plot
+                options as the value, passed straight to the matplotlib plot)
+            * linewidth: line width of plots (defaults to 2)
+            * kinds: comma-separated list of kinds of plots:
+                * bar: bar plot
+                * barstacked: stacked bar plot
+                * barlog: bar plot with logarithmic y-axis
+                * barstackedlog: stacked bar plot with logarithmic y-axis
+                * plot: regular plot
+                * semilogx: plot with logarithmic x-axis
+                * semilogy: plot with logarithmic y-axis
+                * loglog: log-log plot
+            * subplot: instead of creating multiple plots, put them side by
+                side as subplots with a shared y-axis (defaults to `False`)
+            * axis: if set to "tight", use tight axis (default for subplot)
+            * hscale: scale factor for height of the plot
+            * wscale: scale factor for width of the plot
+            * bargroups: for a stacked bar plot, group these parameters next
+                to each other instead of stacking them
+            * baseline: Add a baseline to the plot: tuple of parameter value
+                (needs to be part of groups) and a value along the x-axis, to
+                be plotted along the entire length of the axis
+            * speedup: tuple of either the same length as groups (speedup
+                relative to a specimen in the group) or 1 + length of groups
+                (speedup relative to a single data point)
+            * transform: function to transform the y-values (receives x-values
+                and y-values as parameters)
+            * colormap: color map to cycle through
+        """
         if rank > 0:
             return
         timings = kwargs.pop('timings', self.result['timings'])
@@ -618,6 +750,7 @@ class Benchmark(object):
                 save(fig, '%s_%s' % (figname, kind), outline)
 
     def archive(self, dirname=None):
+        """Archive results, profiles and plots in a timestamped directory."""
         timestamp = datetime.now().strftime('%Y-%m-%dT%H%M%S')
         dirname = dirname or path.join(self.basedir, timestamp)
         makedirs(dirname)
