@@ -6,7 +6,7 @@ from datetime import datetime
 from inspect import getfile
 from itertools import product
 import json
-from os import path, makedirs, remove
+from os import path, makedirs
 from pprint import pprint
 import shutil
 from subprocess import call
@@ -315,8 +315,6 @@ class Benchmark(object):
                 timings[pvalues] = times
             else:
                 self.result['timings'] = times
-            # Auto save
-            self.save(suffix='.autosave~')
         return self.result
 
     def _file(self, filename=None, suffix=None):
@@ -348,11 +346,6 @@ class Benchmark(object):
         which default to the global name and suffix attributes if not given."""
         if rank > 0:
             return
-        if path.exists(self._file(filename, '.autosave~')):
-            try:
-                remove(self._file(filename, '.autosave~'))
-            except OSError:
-                pass
         with open(self._file(filename, suffix), 'w') as f:
             pprint(self.result, f)
 
