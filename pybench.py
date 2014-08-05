@@ -297,7 +297,9 @@ class Benchmark(object):
             pkeys, pvals = (), ()
         for pvalues in product(*pvals):
             if rank == 0:
-                print 'Benchmark', name, 'for parameters', ', '.join('%s=%s' % (k, v) for k, v in zip(pkeys, pvalues))
+                pstr = ', '.join('%s=%s' % (k, v) for k, v in zip(pkeys, pvalues))
+                sstr = ', '.join('%s=%s' % (k, v) for k, v in self.series.items())
+                print 'Benchmark', name, 'for parameters', pstr, 'series', sstr
             kwargs.update(dict(zip(pkeys, pvalues)))
 
             for _ in range(warmups):
