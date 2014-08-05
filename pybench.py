@@ -597,10 +597,11 @@ class Benchmark(object):
             for i, s in enumerate(speedup):
                 gvals[i] = filter(lambda x: x != s, gvals[i])
 
-        def lookup(pv, *args):
+        def lookup(region, pv, *args):
             for i, a in sorted(zip(idx, args)):
                 pv = pv[:i] + (a,) + pv[i:]
-            return timings[pv]
+            v = timings.get(pv)
+            return v[region] if v is not None else np.nan
 
         offset = np.arange(len(xvals)) + 0.1
         xticks = np.arange(len(xvals)) + 0.5
@@ -657,57 +658,54 @@ class Benchmark(object):
                 i = 0
                 for g, gv in enumerate(product(*gvals)):
                     for ir, r in enumerate(regions):
-                        try:
+                        if baseline and baseline[0] in gv:
+                            yvals = np.array([lookup(r, pv, baseline[1], *gv) for _ in xvals])
+                        else:
+                            yvals = np.array([lookup(r, pv, v, *gv) for v in xvals])
+                        # Skip parameters used for speedup when generating label
+                        skip = len(speedup) if speedup_group else 0
+                        rlabel = [] if nregions == 1 else [r]
+                        if labels == 'compact':
+                            label = ', '.join(rlabel + map(str, gv[skip:]))
+                        elif labels == 'long':
+                            label = ', '.join(rlabel + ['%s: %s' % _ for _ in zip(groups[skip:], gv[skip:])])
+                        elif isinstance(labels, dict):
+                            label = labels[gv]
+                        # 1) speedup relative to a specimen in the group
+                        if speedup_group:
+                            yvals = np.array([lookup(r, pv, v, *(speedup + gv[len(speedup):])) for v in xvals]) / yvals
+                        # 2) speedup relative to a single datapoint
+                        elif speedup_single:
+                            yvals = lookup(r, pv, *speedup) / yvals
+                        if transform:
+                            yvals = transform(xvals, yvals)
+                        if kind in ['barstacked', 'barstackedlog']:
+                            line = plot(offset + group(r) * w, yvals, w,
+                                        bottom=ystack[group(r)], label=label,
+                                        color=colors[ir], hatch=fillstyles[g % 4],
+                                        log=kind == 'barstackedlog')
+                            ax.set_xticks(xticks)
+                            ax.set_xticklabels(xvalues or xvals)
+                            ystack[group(r)] += yvals
+                        elif kind in ['bar', 'barlog']:
+                            line = plot(offset + i * w, yvals, w, label=label,
+                                        color=colors[ir], hatch=fillstyles[g % 4],
+                                        log=kind == 'barlog')
+                            ax.set_xticks(xticks)
+                            ax.set_xticklabels(xvalues or xvals)
+                        else:
                             if baseline and baseline[0] in gv:
-                                yvals = np.array([lookup(pv, baseline[1], *gv)[r] for _ in xvals])
+                                line, = plot(xvalues or xvals, yvals, label=label, lw=linewidth, color='k')
                             else:
-                                yvals = np.array([lookup(pv, v, *gv)[r] for v in xvals])
-                            # Skip parameters used for speedup when generating label
-                            skip = len(speedup) if speedup_group else 0
-                            rlabel = [] if nregions == 1 else [r]
-                            if labels == 'compact':
-                                label = ', '.join(rlabel + map(str, gv[skip:]))
-                            elif labels == 'long':
-                                label = ', '.join(rlabel + ['%s: %s' % _ for _ in zip(groups[skip:], gv[skip:])])
-                            elif isinstance(labels, dict):
-                                label = labels[gv]
-                            # 1) speedup relative to a specimen in the group
-                            if speedup_group:
-                                yvals = np.array([lookup(pv, v, *(speedup + gv[len(speedup):]))[r] for v in xvals]) / yvals
-                            # 2) speedup relative to a single datapoint
-                            elif speedup_single:
-                                yvals = lookup(pv, *speedup)[r] / yvals
-                            if transform:
-                                yvals = transform(xvals, yvals)
-                            if kind in ['barstacked', 'barstackedlog']:
-                                line = plot(offset + group(r) * w, yvals, w,
-                                            bottom=ystack[group(r)], label=label,
-                                            color=colors[ir], hatch=fillstyles[g % 4],
-                                            log=kind == 'barstackedlog')
-                                ax.set_xticks(xticks)
-                                ax.set_xticklabels(xvalues or xvals)
-                                ystack[group(r)] += yvals
-                            elif kind in ['bar', 'barlog']:
-                                line = plot(offset + i * w, yvals, w, label=label,
-                                            color=colors[ir], hatch=fillstyles[g % 4],
-                                            log=kind == 'barlog')
-                                ax.set_xticks(xticks)
-                                ax.set_xticklabels(xvalues or xvals)
-                            else:
-                                if baseline and baseline[0] in gv:
-                                    line, = plot(xvalues or xvals, yvals, label=label, lw=linewidth, color='k')
-                                else:
-                                    line, = plot(xvalues or xvals, yvals, label=label, lw=linewidth,
-                                                 linestyle=linestyles[(g if nregions > ngroups else ir) % 4],
-                                                 **plotstyle.get(r, {}))
-                                if xtickbins and kind == 'plot':
-                                    ax.locator_params(axis='x', nbins=xtickbins)
-                                if subplot or axis == 'tight':
-                                    ax.axis('tight')
-                                    xmin, xmax, ymin, ymax = ax.axis()
-                                    ax.axis([xmin * .9, xmax * 1.1, ymin * 0.9, ymax * 1.1])
-                        except KeyError as e:
-                            print "Parameter combination not found:", e.message
+                                line, = plot(xvalues or xvals, yvals, label=label, lw=linewidth,
+                                             linestyle=linestyles[(g if nregions > ngroups else ir) % 4],
+                                             **plotstyle.get(r, {}))
+                            if xtickbins and kind == 'plot':
+                                ax.locator_params(axis='x', nbins=xtickbins)
+                            if subplot or axis == 'tight':
+                                ax.axis('tight')
+                                xmin, xmax, ymin, ymax = ax.axis()
+                                ax.axis([xmin * .9, xmax * 1.1, ymin * 0.9, ymax * 1.1])
                         i += 1
                         if subplot and p == 1:
                             figs[kind]['lines'].append(line)
