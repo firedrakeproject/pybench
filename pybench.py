@@ -11,6 +11,7 @@ from pprint import pprint
 import shutil
 from subprocess import call
 import time
+from warnings import warn
 
 import matplotlib as mpl
 mpl.use("Agg")
@@ -410,7 +411,11 @@ class Benchmark(object):
         for svalues in product(*svals):
             suff = '_'.join('%s%s' % (k, v) for k, v in zip(skeys, svalues))
             fname = '%s_%s' % (filename, suff)
-            res = self._read(fname)
+            try:
+                res = self._read(fname)
+            except IOError:
+                warn("Series not found: " + str(svalues))
+                continue
             for key in ['description', 'plotstyle', 'meta', 'regions', 'colormap']:
                 result[key] = res[key]
             if pkeys == skeys:
