@@ -3,6 +3,7 @@ from collections import defaultdict
 from contextlib import contextmanager
 from cProfile import Profile
 from datetime import datetime
+from functools import wraps
 from inspect import getfile
 from itertools import product
 import json
@@ -60,6 +61,17 @@ tex_table = """
 %{- endfor %}
 \\end{tabulary}
 """
+
+
+def timed(f):
+    """A decorator timing a function and returning the execution time alongside
+    the result."""
+    @wraps(f)
+    def wrapper(*args, **kwargs):
+        t_ = time.time()
+        ret = f(*args, **kwargs)
+        return time.time() - t_, ret
+    return wrapper
 
 
 class Benchmark(object):
