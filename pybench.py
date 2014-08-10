@@ -314,7 +314,6 @@ class Benchmark(object):
                        'average': average.__name__,
                        'method': method.__name__,
                        'regions': self.regions.keys(),
-                       'plotstyle': self.plotstyle,
                        'colormap': self.colormap,
                        'meta': self.meta,
                        'series': self.series,
@@ -384,15 +383,12 @@ class Benchmark(object):
         """Combine results given by the dictionary `files`, with file names as
         keys and prefixes as values. The prefix is prepended to the regions."""
         result = {'name': self.name, 'series': self.series}
-        plotstyle = {}
         timings = defaultdict(dict)
         regions = set()
         for name, pref in files.items():
             res = self._read(name)
             for key in ['description', 'meta', 'params', 'colormap']:
                 result[key] = res[key]
-            for k, v in res['plotstyle'].items():
-                plotstyle[pref + ' ' + k] = v
             for k, v in res['timings'].items():
                 # Parametrized benchmark
                 if isinstance(v, dict):
@@ -403,7 +399,6 @@ class Benchmark(object):
                 else:
                     timings[pref + ' ' + k] = v
                     regions.add(pref + ' ' + k)
-        result['plotstyle'] = plotstyle
         result['timings'] = timings
         result['regions'] = list(regions)
         self.result = result
@@ -446,7 +441,7 @@ class Benchmark(object):
             except IOError:
                 warn("Series not found: " + str(svalues))
                 continue
-            for key in ['description', 'plotstyle', 'meta', 'regions', 'colormap']:
+            for key in ['description', 'meta', 'regions', 'colormap']:
                 result[key] = res[key]
             if pkeys == skeys:
                 timings[svalues] = res['timings']
@@ -579,7 +574,7 @@ class Benchmark(object):
         legend = kwargs.get('legend', {'loc': 'best'})
         format = kwargs.pop('format', 'svg')
         plotdir = kwargs.pop('plotdir', self.plotdir)
-        plotstyle = kwargs.pop('plotstyle', self.result['plotstyle'])
+        plotstyle = kwargs.pop('plotstyle', self.plotstyle)
         linewidth = kwargs.pop('linewidth', 2)
         kinds = kwargs.pop('kinds', 'plot')
         subplot = kwargs.get('subplot')
