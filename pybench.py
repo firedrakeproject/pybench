@@ -74,6 +74,22 @@ def timed(f):
     return wrapper
 
 
+def parser(**kwargs):
+    """Build an argument parser for plot scripts."""
+    p = ArgumentParser(**kwargs)
+    p.add_argument('-i', '--resultsdir',
+                   help='directory containing results')
+    p.add_argument('-o', '--plotdir',
+                   help='directory where to create the plots')
+    p.add_argument('-s', '--sequential', action='store_true',
+                   help='create plots for sequential runs')
+    p.add_argument('-p', '--parallel', type=int, nargs='+', metavar='NP',
+                   help='create plots for strong scaling parallel runs')
+    p.add_argument('-w', '--weak', type=int, nargs='+', metavar='NP',
+                   help='create plots for weak scaling parallel runs')
+    return p
+
+
 class Benchmark(object):
     """An abstract base class for benchmarks."""
     params = []
