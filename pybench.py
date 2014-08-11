@@ -136,7 +136,8 @@ class Benchmark(object):
         self.benchmark = getattr(self, 'benchmark', self.__class__.__name__)
         self.description = self.__doc__
         for k, v in kwargs.items():
-            setattr(self, k, v)
+            if v is not None:
+                setattr(self, k, v)
         if isinstance(self.method, str):
             self.method = getattr(self, self.method, self.method)
         self.regions = defaultdict(float)
