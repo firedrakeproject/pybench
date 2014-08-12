@@ -515,7 +515,8 @@ class Benchmark(object):
             * xvalues: values to use for x tick labels (defaults to the
                 parameter values selected through `xaxis`)
             * ylabel: y-axis label (defaults to "time [sec]")
-            * xtickbins: number of bins to
+            * xtickbins: number of bins to show along the x axis
+            * xticklabels: custom xtick labels (uses xvalues as the x ticks)
             * regions: regions to plot
             * groups: list of parameters to group (group parameters will be
                 shown in the same plot rather than creating multiple plots)
@@ -565,6 +566,7 @@ class Benchmark(object):
         params = kwargs.pop('params', self.result['params'])
         xlabel = kwargs.pop('xlabel', xaxis)
         xvalues = kwargs.pop('xvalues', None)
+        xticklabels = kwargs.pop('xticklabels', None)
         ylabel = kwargs.pop('ylabel', 'time [sec]')
         xtickbins = kwargs.get('xtickbins')
         regions = kwargs.pop('regions', self.result['regions'])
@@ -726,6 +728,9 @@ class Benchmark(object):
                                 line, = plot(xvalues or xvals, yvals, label=label, lw=linewidth,
                                              linestyle=linestyles[(g if nregions > ngroups else ir) % 4],
                                              **plotstyle.get(r, {}))
+                            if xticklabels:
+                                ax.set_xticks(xvalues or xvals)
+                                ax.set_xticklabels(xticklabels)
                             if xtickbins and kind == 'plot':
                                 ax.locator_params(axis='x', nbins=xtickbins)
                             if subplot or axis == 'tight':
