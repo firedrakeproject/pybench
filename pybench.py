@@ -14,13 +14,17 @@ from subprocess import call
 import time
 from warnings import warn
 
-import matplotlib as mpl
-mpl.use("Agg")
-from matplotlib.font_manager import FontProperties
-fontP = FontProperties()
-fontP.set_size('small')
-import matplotlib.pyplot as plt
-import numpy as np
+# Imports for plot, warn if those fail but do not die
+try:
+    import matplotlib as mpl
+    mpl.use("Agg")
+    from matplotlib.font_manager import FontProperties
+    fontP = FontProperties()
+    fontP.set_size('small')
+    import matplotlib.pyplot as plt
+    import numpy as np
+except ImportError:
+    warn("Importing matplotlib failed, plot functionality not available.")
 
 try:
     from mpi4py import MPI
