@@ -548,6 +548,10 @@ class Benchmark(object):
             * subplot: instead of creating multiple plots, put them side by
                 side as subplots with a shared y-axis (defaults to `False`)
             * axis: if set to "tight", use tight axis (default for subplot)
+            * xmin: set minimum of x-axis
+            * xmax: set maximum of x-axis
+            * ymin: set minimum of y-axis
+            * ymax: set maximum of y-axis
             * hscale: scale factor for height of the plot
             * wscale: scale factor for width of the plot
             * bargroups: for a stacked bar plot, group these parameters next
@@ -586,6 +590,10 @@ class Benchmark(object):
         kinds = kwargs.pop('kinds', 'plot')
         subplot = kwargs.get('subplot')
         axis = kwargs.get('axis')
+        xmin = kwargs.get('xmin')
+        xmax = kwargs.get('xmax')
+        ymin = kwargs.get('ymin')
+        ymax = kwargs.get('ymax')
         hscale = kwargs.get('hscale')
         wscale = kwargs.get('wscale')
         bargroups = kwargs.get('bargroups', [''])
@@ -751,7 +759,6 @@ class Benchmark(object):
                     ax.set_position([box.x0, box.y0, box.width * wscale, box.height])
                 # Scale current axis vertically
                 if hscale:
-                    # Shink current axis
                     box = ax.get_position()
                     ax.set_position([box.x0, box.y0, box.width, box.height * hscale])
                 if not subplot:
@@ -764,6 +771,8 @@ class Benchmark(object):
                 elif title:
                     ax.set_title(title % pdict)
                 ax.grid()
+                ax.set_xlim(left=xmin, right=xmax)
+                ax.set_ylim(bottom=ymin, top=ymax)
                 if not subplot:
                     save(fig, '%s_%s_%s' % (figname, kind, fsuff), outline)
             outline += ['</tr>']
