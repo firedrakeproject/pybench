@@ -516,6 +516,7 @@ class Benchmark(object):
             * figsize: figure size (defaults to (9, 6))
             * params: benchmark parameters
             * xlabel: x-axis label (defaults to the value of `xaxis`)
+            * xvals: values to use for x axis (overrides parameters)
             * xvalues: values to use for x tick labels (defaults to the
                 parameter values selected through `xaxis`)
             * ylabel: y-axis label (defaults to "time [sec]")
@@ -626,7 +627,7 @@ class Benchmark(object):
         pkeys, pvals = zip(*params)
         idx = [pkeys.index(a) for a in [xaxis] + groups]
         pkeys = [p for p in pkeys if p not in [xaxis] + groups]
-        xvals = pvals[idx[0]]
+        xvals = kwargs.pop('xvals', pvals[idx[0]])
         xvalues = kwargs.pop('xvalues', xvals)
         gvals = [pvals[i] for i in idx[1:]]
         pvals = [p for i, p in enumerate(pvals) if i not in idx]
