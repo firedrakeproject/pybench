@@ -573,7 +573,6 @@ class Benchmark(object):
         figsize = kwargs.pop('figsize', (9, 6))
         params = kwargs.pop('params', self.result['params'])
         xlabel = kwargs.pop('xlabel', xaxis)
-        xvalues = kwargs.pop('xvalues', None)
         xticklabels = kwargs.pop('xticklabels', None)
         ylabel = kwargs.pop('ylabel', 'time [sec]')
         xtickbins = kwargs.get('xtickbins')
@@ -624,6 +623,7 @@ class Benchmark(object):
         idx = [pkeys.index(a) for a in [xaxis] + groups]
         pkeys = [p for p in pkeys if p not in [xaxis] + groups]
         xvals = pvals[idx[0]]
+        xvalues = kwargs.pop('xvalues', xvals)
         gvals = [pvals[i] for i in idx[1:]]
         pvals = [p for i, p in enumerate(pvals) if i not in idx]
         nregions = len(regions)
@@ -725,23 +725,23 @@ class Benchmark(object):
                                         color=colors[ir], hatch=fillstyles[g % 4],
                                         log=kind == 'barstackedlog')
                             ax.set_xticks(xticks)
-                            ax.set_xticklabels(xvalues or xvals)
+                            ax.set_xticklabels(xvalues)
                             ystack[group(r)] += yvals
                         elif kind in ['bar', 'barlog']:
                             line = plot(offset + i * w, yvals, w, label=label,
                                         color=colors[ir], hatch=fillstyles[g % 4],
                                         log=kind == 'barlog')
                             ax.set_xticks(xticks)
-                            ax.set_xticklabels(xvalues or xvals)
+                            ax.set_xticklabels(xvalues)
                         else:
                             if baseline and baseline[0] in gv:
-                                line, = plot(xvalues or xvals, yvals, label=label, lw=linewidth, color='k')
+                                line, = plot(xvalues, yvals, label=label, lw=linewidth, color='k')
                             else:
-                                line, = plot(xvalues or xvals, yvals, label=label, lw=linewidth,
+                                line, = plot(xvalues, yvals, label=label, lw=linewidth,
                                              linestyle=linestyles[(g if nregions > ngroups else ir) % 4],
                                              **plotstyle.get(r, {}))
                             if xticklabels:
-                                ax.set_xticks(xvalues or xvals)
+                                ax.set_xticks(xvalues)
                                 ax.set_xticklabels(xticklabels)
                             if xtickbins and kind == 'plot':
                                 ax.locator_params(axis='x', nbins=xtickbins)
