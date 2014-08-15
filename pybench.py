@@ -556,6 +556,7 @@ class Benchmark(object):
             * wscale: scale factor for width of the plot
             * bargroups: for a stacked bar plot, group these parameters next
                 to each other instead of stacking them
+            * trendline: Add a trendline for perfect speedup with given label
             * baseline: Add a baseline to the plot: tuple of parameter value
                 (needs to be part of groups) and a value along the x-axis, to
                 be plotted along the entire length of the axis
@@ -596,6 +597,7 @@ class Benchmark(object):
         hscale = kwargs.get('hscale')
         wscale = kwargs.get('wscale')
         bargroups = kwargs.get('bargroups', [''])
+        trendline = kwargs.get('trendline')
         # Add a baseline to the plot: tuple of parameter value (needs to be part
         # of groups) and a value along the x-axis, to be plotted along the
         # entire length of the axis
@@ -737,6 +739,11 @@ class Benchmark(object):
                             if baseline and baseline[0] in gv:
                                 line, = plot(xvalues, yvals, label=label, lw=linewidth, color='k')
                             else:
+                                if trendline:
+                                    tl, = plot(xvalues, xvalues[0]*yvals[0]/xvalues, lw=1, color='k', label=trendline)
+                                    # prevent creating multiple legend entried
+                                    # (labels starting with _ are ignored)
+                                    trendline = '_'
                                 line, = plot(xvalues, yvals, label=label, lw=linewidth,
                                              linestyle=linestyles[(g if nregions > ngroups else ir) % 4],
                                              **plotstyle.get(r, {}))
@@ -751,6 +758,9 @@ class Benchmark(object):
                                 ax.axis([xmin * .9, xmax * 1.1, ymin * 0.9, ymax * 1.1])
                         i += 1
                         if subplot and p == 1:
+                            if trendline and trendline != '_':
+                                figs[kind]['lines'].append(tl)
+                                figs[kind]['labels'].append(trendline)
                             figs[kind]['lines'].append(line)
                             figs[kind]['labels'].append(label)
                 # Scale current axis horizontally
