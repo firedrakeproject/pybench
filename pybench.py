@@ -521,6 +521,7 @@ class Benchmark(object):
             * ylabel: y-axis label (defaults to "time [sec]")
             * xtickbins: number of bins to show along the x axis
             * xticklabels: custom xtick labels (uses xvalues as the x ticks)
+            * hidexticks: list of indices of xtick labels to hide
             * regions: regions to plot
             * groups: list of parameters to group (group parameters will be
                 shown in the same plot rather than creating multiple plots)
@@ -575,6 +576,7 @@ class Benchmark(object):
         params = kwargs.pop('params', self.result['params'])
         xlabel = kwargs.pop('xlabel', xaxis)
         xticklabels = kwargs.pop('xticklabels', None)
+        hidexticks = kwargs.pop('hidexticks', None)
         ylabel = kwargs.pop('ylabel', 'time [sec]')
         xtickbins = kwargs.get('xtickbins')
         regions = kwargs.pop('regions', self.result['regions'])
@@ -783,6 +785,10 @@ class Benchmark(object):
                 ax.grid()
                 ax.set_xlim(left=xmin, right=xmax)
                 ax.set_ylim(bottom=ymin, top=ymax)
+                if hidexticks:
+                    xticks = ax.xaxis.get_major_ticks()
+                    for i in hidexticks:
+                        xticks[i].label.set_visible(False)
                 if not subplot:
                     save(fig, '%s_%s_%s' % (figname, kind, fsuff), outline)
             outline += ['</tr>']
