@@ -319,7 +319,6 @@ class Benchmark(object):
                        'average': average.__name__,
                        'method': method.__name__,
                        'regions': self.regions.keys(),
-                       'colormap': self.colormap,
                        'meta': self.meta,
                        'series': self.series,
                        'timings': timings}
@@ -392,7 +391,7 @@ class Benchmark(object):
         regions = set()
         for name, pref in files.items():
             res = self._read(name)
-            for key in ['description', 'meta', 'params', 'colormap']:
+            for key in ['description', 'meta', 'params']:
                 result[key] = res[key]
             for k, v in res['timings'].items():
                 # Parametrized benchmark
@@ -446,7 +445,7 @@ class Benchmark(object):
             except IOError:
                 warn("Series not found: " + str(svalues))
                 continue
-            for key in ['description', 'meta', 'regions', 'colormap']:
+            for key in ['description', 'meta', 'regions']:
                 result[key] = res[key]
             if pkeys == skeys:
                 timings[svalues] = res['timings']
@@ -611,7 +610,7 @@ class Benchmark(object):
         speedup = kwargs.get('speedup', False)
         transform = kwargs.get('transform')
         # Set the default color cycle according to the given color map
-        colormap = kwargs.pop('colormap', self.result.get('colormap', self.colormap))
+        colormap = kwargs.pop('colormap', self.colormap)
         cmap = mpl.cm.get_cmap(name=colormap)
         linestyles = ('solid', 'dashed', 'dashdot', 'dotted')
         fillstyles = ('', '/', '\\', '-')
