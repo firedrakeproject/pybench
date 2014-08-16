@@ -505,38 +505,242 @@ class Benchmark(object):
             with open(path.join(tabledir, "%s.%s" % (filename, fmt)), 'w') as f:
                 f.write(templates[fmt].render(d))
 
-    def plot(self, xaxis, **kwargs):
-        """Plot results.
+    def subplot(self, ax, kind='plot', **kwargs):
+        """Plot a graph into the given axes
 
-        :param xaxis: the parameter to plot on the x-axis
+        :param ax: the axes to plot into
+        :param kind: type of plot
+            * bar: bar plot
+            * barstacked: stacked bar plot
+            * barlog: bar plot with logarithmic y-axis
+            * barstackedlog: stacked bar plot with logarithmic y-axis
+            * plot: regular plot
+            * semilogx: plot with logarithmic x-axis
+            * semilogy: plot with logarithmic y-axis
+            * loglog: log-log plot
         :param kwargs: keyword arguments override values given in the results
-            * timings: benchmark timings
-            * figname: base name of output file
-            * figsize: figure size (defaults to (9, 6))
-            * params: benchmark parameters
-            * xlabel: x-axis label (defaults to the value of `xaxis`)
-            * xvals: values to use for x axis (overrides parameters)
-            * xvalues: values to use for x tick labels (defaults to the
-                parameter values selected through `xaxis`)
-            * ylabel: y-axis label (defaults to "time [sec]")
-            * xtickbins: number of bins to show along the x axis
-            * xticklabels: custom xtick labels (uses xvalues as the x ticks)
+            * axis: if set to "tight", use tight axis (default for subplot)
+            * bargroups: for a stacked bar plot, group these parameters next
+                to each other instead of stacking them
+            * baseline: Add a baseline to the plot: tuple of parameter value
+                (needs to be part of groups) and a value along the x-axis, to
+                be plotted along the entire length of the axis
+            * colormap: color map to cycle through
             * hidexticks: list of indices of xtick labels to hide
-            * regions: regions to plot
-            * groups: list of parameters to group (group parameters will be
-                shown in the same plot rather than creating multiple plots)
-            * title: plot title (defaults to the name property)
+            * hscale: scale factor for height of the plot
             * labels: either a dictionary of one label per group or "compact",
                 to generate short labels with only the parameter values, or
                 "long", which includes parameter names and values
             * legend: dictionary of legend options, passed as keyword argument
                 to the matplotlib legend function
-            * format: comma-separated list of output formats (defaults to svg)
-            * plotdir: output directory
+            * linewidth: line width of plots (defaults to 2)
             * plotstyle: plot style to use for each timed region (nested
                 dictionary with a key per region and a dictionary of plot
                 options as the value, passed straight to the matplotlib plot)
-            * linewidth: line width of plots (defaults to 2)
+            * regions: regions to plot
+            * speedup: tuple of either the same length as groups (speedup
+                relative to a specimen in the group) or 1 + length of groups
+                (speedup relative to a single data point)
+            * timings: benchmark timings
+            * title: plot title (defaults to the name property)
+            * transform: function to transform the y-values (receives x-values
+                and y-values as parameters)
+            * trendline: Add a trendline for perfect speedup with given label
+            * wscale: scale factor for width of the plot
+            * xlabel: x-axis label
+            * xmax: set maximum of x-axis
+            * xmin: set minimum of x-axis
+            * xtickbins: number of bins to show along the x axis
+            * xticklabels: custom xtick labels (uses xvalues as the x ticks)
+            * xvals: values to use for x axis (overrides parameters)
+            * xvalues: values to use for x tick labels (defaults to the
+                parameter values selected through `xaxis`)
+            * ylabel: y-axis label (defaults to "time [sec]")
+            * ymax: set maximum of y-axis
+            * ymin: set minimum of y-axis
+        """
+        axis = kwargs.get('axis')
+        bargroups = kwargs.get('bargroups', [''])
+        baseline = kwargs.get('baseline')
+        colormap = kwargs.pop('colormap', self.colormap)
+        hidexticks = kwargs.pop('hidexticks', None)
+        hscale = kwargs.get('hscale')
+        labels = kwargs.get('labels', 'compact')
+        legend = kwargs.get('legend', {'loc': 'best'})
+        linewidth = kwargs.pop('linewidth', 2)
+        regions = kwargs.pop('regions', self.result['regions'])
+        timings = kwargs.pop('timings', self.result['timings'])
+        title = kwargs.pop('title', self.name)
+        transform = kwargs.get('transform')
+        xlabel = kwargs.pop('xlabel')
+        xmax = kwargs.get('xmax')
+        xmin = kwargs.get('xmin')
+        xtickbins = kwargs.get('xtickbins')
+        xticklabels = kwargs.pop('xticklabels', None)
+        xvals = kwargs.pop('xvals')
+        xvalues = kwargs.pop('xvalues', xvals)
+        offset = np.arange(len(xvals)) + 0.1
+        plotstyle = kwargs.pop('plotstyle', self.plotstyle)
+        speedup = kwargs.get('speedup', False)
+        trendline = kwargs.get('trendline')
+        wscale = kwargs.get('wscale')
+        xticks = np.arange(len(xvals)) + 0.5
+        ylabel = kwargs.pop('ylabel', 'time [sec]')
+        ymax = kwargs.get('ymax')
+        ymin = kwargs.get('ymin')
+
+        groups, gvals = zip(*kwargs.pop('groups'))
+        params = kwargs.pop('params')
+        pvals = zip(*params)[1]
+        idx = kwargs.get('idx', [0])
+
+        nregions = len(regions)
+        ngroups = int(np.prod([len(g) for g in gvals]))
+        speedup_group = speedup and len(speedup) <= len(gvals)
+        speedup_single = speedup and len(speedup) == len(gvals) + 1
+        if speedup_group:
+            gvals = list(gvals)
+            for i, s in enumerate(speedup):
+                gvals[i] = filter(lambda x: x != s, gvals[i])
+        # Set the default color cycle according to the given color map
+        cmap = mpl.cm.get_cmap(name=colormap)
+        # Colour by region or group, whichever there are more of
+        colors = [cmap(i) for i in np.linspace(0, 0.9, max(nregions, ngroups))]
+        ax.set_color_cycle(colors)
+        linestyles = ('solid', 'dashed', 'dashdot', 'dotted')
+        fillstyles = ('', '/', '\\', '-')
+
+        def lookup(region, *args):
+            pv = pvals
+            for i, a in sorted(zip(idx, args)):
+                pv = pv[:i] + (a,) + pv[i:]
+            v = timings.get(pv)
+            return v[region] if v is not None else np.nan
+
+        def group(r):
+            for i, g in enumerate(bargroups):
+                if g in r:
+                    return i
+            return 0
+
+        if kind == 'barstacked':
+            ystack = [np.zeros_like(xvals, dtype=np.float) for _ in bargroups]
+        plot = {'bar': ax.bar,
+                'barstacked': ax.bar,
+                'barlog': ax.bar,
+                'barstackedlog': ax.bar,
+                'plot': ax.plot,
+                'semilogx': ax.semilogx,
+                'semilogy': ax.semilogy,
+                'loglog': ax.loglog}[kind]
+        if kind in ['bar', 'barlog']:
+            w = (2*len(speedup) if speedup_group else 1) * 0.8 / (nregions * ngroups)
+        else:
+            w = 0.8 / len(bargroups)
+        i = 0
+        for g, gv in enumerate(product(*gvals)):
+            for ir, r in enumerate(regions):
+                if baseline and baseline[0] in gv:
+                    yvals = np.array([lookup(r, baseline[1], *gv) for _ in xvals])
+                else:
+                    yvals = np.array([lookup(r, v, *gv) for v in xvals])
+                if np.isnan(yvals).all():
+                    continue
+                # Skip parameters used for speedup when generating label
+                skip = len(speedup) if speedup_group else 0
+                rlabel = [] if nregions == 1 else [r]
+                if labels == 'compact':
+                    label = ', '.join(rlabel + map(str, gv[skip:]))
+                elif labels == 'long':
+                    label = ', '.join(rlabel + ['%s: %s' % _ for _ in zip(groups[skip:], gv[skip:])])
+                elif isinstance(labels, dict):
+                    label = labels[gv]
+                # 1) speedup relative to a specimen in the group
+                if speedup_group:
+                    yvals = np.array([lookup(r, v, *(speedup + gv[len(speedup):])) for v in xvals]) / yvals
+                # 2) speedup relative to a single datapoint
+                elif speedup_single:
+                    yvals = lookup(r, *speedup) / yvals
+                if transform:
+                    yvals = transform(xvals, yvals)
+                if kind in ['barstacked', 'barstackedlog']:
+                    line = plot(offset + group(r) * w, yvals, w,
+                                bottom=ystack[group(r)], label=label,
+                                color=colors[ir], hatch=fillstyles[g % 4],
+                                log=kind == 'barstackedlog')
+                    ax.set_xticks(xticks)
+                    ax.set_xticklabels(xvalues)
+                    ystack[group(r)] += yvals
+                elif kind in ['bar', 'barlog']:
+                    line = plot(offset + i * w, yvals, w, label=label,
+                                color=colors[ir], hatch=fillstyles[g % 4],
+                                log=kind == 'barlog')
+                    ax.set_xticks(xticks)
+                    ax.set_xticklabels(xvalues)
+                else:
+                    if baseline and baseline[0] in gv:
+                        line, = plot(xvalues, yvals, label=label, lw=linewidth, color='k')
+                    else:
+                        if trendline:
+                            tl, = plot(xvalues, xvalues[0]*yvals[0]/xvalues, lw=1, color='k', label=trendline)
+                            # prevent creating multiple legend entried
+                            # (labels starting with _ are ignored)
+                            trendline = '_'
+                        line, = plot(xvalues, yvals, label=label, lw=linewidth,
+                                     linestyle=linestyles[(g if nregions > ngroups else ir) % 4],
+                                     **plotstyle.get(r, {}))
+                    if xticklabels:
+                        ax.set_xticks(xvalues)
+                        ax.set_xticklabels(xticklabels)
+                    if xtickbins and kind == 'plot':
+                        ax.locator_params(axis='x', nbins=xtickbins)
+                    if axis == 'tight':
+                        ax.axis('tight')
+                        x0, x1, y0, y1 = ax.axis()
+                        ax.axis([x0 * .9, x1 * 1.1, y0 * 0.9, y1 * 1.1])
+                i += 1
+        # Scale current axis horizontally
+        if wscale:
+            box = ax.get_position()
+            ax.set_position([box.x0, box.y0, box.width * wscale, box.height])
+        # Scale current axis vertically
+        if hscale:
+            box = ax.get_position()
+            ax.set_position([box.x0, box.y0, box.width, box.height * hscale])
+        if legend is not False:
+            ax.legend(prop=fontP, **legend)
+        if xlabel:
+            ax.set_xlabel(xlabel)
+        if ylabel:
+            ax.set_ylabel(ylabel)
+        if title == self.name:
+            tsuff = ', '.join('%s=%s' % (k, v) for k, v in params)
+            ax.set_title(title + ': ' + tsuff)
+        elif title:
+            ax.set_title(title % dict(params))
+        ax.grid()
+        ax.set_xlim(left=xmin, right=xmax)
+        ax.set_ylim(bottom=ymin, top=ymax)
+        if hidexticks:
+            xticks = ax.xaxis.get_major_ticks()
+            for i in hidexticks:
+                xticks[i].label.set_visible(False)
+
+    def plot(self, xaxis, **kwargs):
+        """Plot results.
+
+        :param xaxis: the parameter to plot on the x-axis
+        :param kwargs: keyword arguments override values given in the results
+            * figname: base name of output file
+            * figsize: figure size (defaults to (9, 6))
+            * params: benchmark parameters
+            * xvals: values to use for x axis (overrides parameters)
+            * groups: list of parameters to group (group parameters will be
+                shown in the same plot rather than creating multiple plots)
+            * legend: dictionary of legend options, passed as keyword argument
+                to the matplotlib legend function
+            * format: comma-separated list of output formats (defaults to svg)
+            * plotdir: output directory
             * kinds: comma-separated list of kinds of plots:
                 * bar: bar plot
                 * barstacked: stacked bar plot
@@ -548,114 +752,29 @@ class Benchmark(object):
                 * loglog: log-log plot
             * subplot: instead of creating multiple plots, put them side by
                 side as subplots with a shared y-axis (defaults to `False`)
-            * axis: if set to "tight", use tight axis (default for subplot)
-            * xmin: set minimum of x-axis
-            * xmax: set maximum of x-axis
-            * ymin: set minimum of y-axis
-            * ymax: set maximum of y-axis
-            * hscale: scale factor for height of the plot
-            * wscale: scale factor for width of the plot
-            * bargroups: for a stacked bar plot, group these parameters next
-                to each other instead of stacking them
-            * trendline: Add a trendline for perfect speedup with given label
-            * baseline: Add a baseline to the plot: tuple of parameter value
-                (needs to be part of groups) and a value along the x-axis, to
-                be plotted along the entire length of the axis
-            * speedup: tuple of either the same length as groups (speedup
-                relative to a specimen in the group) or 1 + length of groups
-                (speedup relative to a single data point)
-            * transform: function to transform the y-values (receives x-values
-                and y-values as parameters)
-            * colormap: color map to cycle through
         """
         if rank > 0:
             return
-        timings = kwargs.pop('timings', self.result['timings'])
         figname = kwargs.pop('figname', self.result['name'])
         figsize = kwargs.pop('figsize', (9, 6))
         params = kwargs.pop('params', self.result['params'])
-        xlabel = kwargs.pop('xlabel', xaxis)
-        xticklabels = kwargs.pop('xticklabels', None)
-        hidexticks = kwargs.pop('hidexticks', None)
-        ylabel = kwargs.pop('ylabel', 'time [sec]')
-        xtickbins = kwargs.get('xtickbins')
-        regions = kwargs.pop('regions', self.result['regions'])
         groups = kwargs.get('groups', [])
-        title = kwargs.pop('title', self.name)
-        # compact (only value) or long (includes parameter name) labels
-        labels = kwargs.get('labels', 'compact')
         legend = kwargs.get('legend', {'loc': 'best'})
         format = kwargs.pop('format', 'svg')
         plotdir = kwargs.pop('plotdir', self.plotdir)
-        plotstyle = kwargs.pop('plotstyle', self.plotstyle)
-        linewidth = kwargs.pop('linewidth', 2)
         kinds = kwargs.pop('kinds', 'plot')
         subplot = kwargs.get('subplot')
-        axis = kwargs.get('axis')
-        xmin = kwargs.get('xmin')
-        xmax = kwargs.get('xmax')
-        ymin = kwargs.get('ymin')
-        ymax = kwargs.get('ymax')
-        hscale = kwargs.get('hscale')
-        wscale = kwargs.get('wscale')
-        bargroups = kwargs.get('bargroups', [''])
-        trendline = kwargs.get('trendline')
-        # Add a baseline to the plot: tuple of parameter value (needs to be part
-        # of groups) and a value along the x-axis, to be plotted along the
-        # entire length of the axis
-        baseline = kwargs.get('baseline')
-        # A tuple of either the same length as groups (speedup relative to a
-        # a specimen in the group) or 1 + length of groups (speedup relative to
-        # a single data point)
-        speedup = kwargs.get('speedup', False)
-        transform = kwargs.get('transform')
-        # Set the default color cycle according to the given color map
-        colormap = kwargs.pop('colormap', self.colormap)
-        cmap = mpl.cm.get_cmap(name=colormap)
-        linestyles = ('solid', 'dashed', 'dashdot', 'dotted')
-        fillstyles = ('', '/', '\\', '-')
         if not path.exists(plotdir):
             makedirs(plotdir)
-
-        def group(r):
-            for i, g in enumerate(bargroups):
-                if g in r:
-                    return i
-            return 0
 
         pkeys, pvals = zip(*params)
         idx = [pkeys.index(a) for a in [xaxis] + groups]
         pkeys = [p for p in pkeys if p not in [xaxis] + groups]
-        xvals = kwargs.pop('xvals', pvals[idx[0]])
-        xvalues = kwargs.pop('xvalues', xvals)
-        gvals = [pvals[i] for i in idx[1:]]
+        kwargs['xvals'] = kwargs.pop('xvals', pvals[idx[0]])
+        kwargs['groups'] = zip(groups, [pvals[i] for i in idx[1:]])
         pvals = [p for i, p in enumerate(pvals) if i not in idx]
-        nregions = len(regions)
-        ngroups = int(np.prod([len(g) for g in gvals]))
-        # Colour by region or group, whichever there are more of
-        colors = [cmap(i) for i in np.linspace(0, 0.9, max(nregions, ngroups))]
-        mpl.rcParams['axes.color_cycle'] = colors
-        speedup_group = speedup and len(speedup) <= len(gvals)
-        speedup_single = speedup and len(speedup) == len(gvals) + 1
-        if speedup_group:
-            for i, s in enumerate(speedup):
-                gvals[i] = filter(lambda x: x != s, gvals[i])
 
-        def lookup(region, pv, *args):
-            for i, a in sorted(zip(idx, args)):
-                pv = pv[:i] + (a,) + pv[i:]
-            v = timings.get(pv)
-            return v[region] if v is not None else np.nan
-
-        offset = np.arange(len(xvals)) + 0.1
-        xticks = np.arange(len(xvals)) + 0.5
-        outline = []
         nv = len(list(product(*pvals)))
-        if subplot:
-            figs = {kind: {'fig': plt.figure(figname + '_' + kind, figsize=figsize, dpi=300),
-                           'lines': [],
-                           'labels': [],
-                           'ax': []} for kind in kinds.split(',')}
 
         def save(fig, fname, outline):
             if not format:
@@ -670,140 +789,42 @@ class Benchmark(object):
                         outline += ['<td><img src="%s"></td>' % fname]
             plt.close(fig)
 
-        for p, pv in enumerate(product(*pvals), 1):
-            pdict = dict(zip(pkeys, pv))
-            fsuff = '_'.join('%s%s' % (k, str(v).replace('.', '_')) for k, v in zip(pkeys, pv))
-            if speedup:
-                fsuff += '_speedup'
-            tsuff = ', '.join('%s=%s' % (k, v) for k, v in zip(pkeys, pv))
-            outline += ['<tr>']
-            for kind in kinds.split(','):
+        for kind in kinds.split(','):
+            outline = []
+            if subplot:
+                axes = []
+                fig = plt.figure(figname + '_' + kind, figsize=figsize, dpi=300)
+            for p, pv in enumerate(product(*pvals), 1):
+                pdict = zip(pkeys, pv)
+                fsuff = '_'.join('%s%s' % (k, str(v).replace('.', '_')) for k, v in zip(pkeys, pv))
                 if subplot:
-                    fig = figs[kind]['fig']
-                    ax = fig.add_subplot(1, nv, p, sharey=(figs[kind]['ax'][p-2] if p > 1 else None))
-                    figs[kind]['ax'].append(ax)
-                else:
+                    ax = fig.add_subplot(1, nv, p, sharey=(axes[p-2] if p > 1 else None))
+                    axes.append(ax)
+                    kwargs['legend'] = False
+                    kwargs['axis'] = 'tight'
+                    if p > 1:
+                        kwargs['ylabel'] = None
+                if not subplot:
                     fig = plt.figure(figname + '_' + fsuff, figsize=figsize, dpi=300)
                     ax = fig.add_subplot(111)
-                if kind == 'barstacked':
-                    ystack = [np.zeros_like(xvals, dtype=np.float) for _ in bargroups]
-                plot = {'bar': ax.bar,
-                        'barstacked': ax.bar,
-                        'barlog': ax.bar,
-                        'barstackedlog': ax.bar,
-                        'plot': ax.plot,
-                        'semilogx': ax.semilogx,
-                        'semilogy': ax.semilogy,
-                        'loglog': ax.loglog}[kind]
-                if kind in ['bar', 'barlog']:
-                    w = (2*len(speedup) if speedup_group else 1) * 0.8 / (nregions * ngroups)
-                else:
-                    w = 0.8 / len(bargroups)
-                i = 0
-                for g, gv in enumerate(product(*gvals)):
-                    for ir, r in enumerate(regions):
-                        if baseline and baseline[0] in gv:
-                            yvals = np.array([lookup(r, pv, baseline[1], *gv) for _ in xvals])
-                        else:
-                            yvals = np.array([lookup(r, pv, v, *gv) for v in xvals])
-                        # Skip parameters used for speedup when generating label
-                        skip = len(speedup) if speedup_group else 0
-                        rlabel = [] if nregions == 1 else [r]
-                        if labels == 'compact':
-                            label = ', '.join(rlabel + map(str, gv[skip:]))
-                        elif labels == 'long':
-                            label = ', '.join(rlabel + ['%s: %s' % _ for _ in zip(groups[skip:], gv[skip:])])
-                        elif isinstance(labels, dict):
-                            label = labels[gv]
-                        # 1) speedup relative to a specimen in the group
-                        if speedup_group:
-                            yvals = np.array([lookup(r, pv, v, *(speedup + gv[len(speedup):])) for v in xvals]) / yvals
-                        # 2) speedup relative to a single datapoint
-                        elif speedup_single:
-                            yvals = lookup(r, pv, *speedup) / yvals
-                        if transform:
-                            yvals = transform(xvals, yvals)
-                        if kind in ['barstacked', 'barstackedlog']:
-                            line = plot(offset + group(r) * w, yvals, w,
-                                        bottom=ystack[group(r)], label=label,
-                                        color=colors[ir], hatch=fillstyles[g % 4],
-                                        log=kind == 'barstackedlog')
-                            ax.set_xticks(xticks)
-                            ax.set_xticklabels(xvalues)
-                            ystack[group(r)] += yvals
-                        elif kind in ['bar', 'barlog']:
-                            line = plot(offset + i * w, yvals, w, label=label,
-                                        color=colors[ir], hatch=fillstyles[g % 4],
-                                        log=kind == 'barlog')
-                            ax.set_xticks(xticks)
-                            ax.set_xticklabels(xvalues)
-                        else:
-                            if baseline and baseline[0] in gv:
-                                line, = plot(xvalues, yvals, label=label, lw=linewidth, color='k')
-                            else:
-                                if trendline:
-                                    tl, = plot(xvalues, xvalues[0]*yvals[0]/xvalues, lw=1, color='k', label=trendline)
-                                    # prevent creating multiple legend entried
-                                    # (labels starting with _ are ignored)
-                                    trendline = '_'
-                                line, = plot(xvalues, yvals, label=label, lw=linewidth,
-                                             linestyle=linestyles[(g if nregions > ngroups else ir) % 4],
-                                             **plotstyle.get(r, {}))
-                            if xticklabels:
-                                ax.set_xticks(xvalues)
-                                ax.set_xticklabels(xticklabels)
-                            if xtickbins and kind == 'plot':
-                                ax.locator_params(axis='x', nbins=xtickbins)
-                            if subplot or axis == 'tight':
-                                ax.axis('tight')
-                                xmin, xmax, ymin, ymax = ax.axis()
-                                ax.axis([xmin * .9, xmax * 1.1, ymin * 0.9, ymax * 1.1])
-                        i += 1
-                        if subplot and p == 1:
-                            if trendline and trendline != '_':
-                                figs[kind]['lines'].append(tl)
-                                figs[kind]['labels'].append(trendline)
-                            figs[kind]['lines'].append(line)
-                            figs[kind]['labels'].append(label)
-                # Scale current axis horizontally
-                if wscale:
-                    box = ax.get_position()
-                    ax.set_position([box.x0, box.y0, box.width * wscale, box.height])
-                # Scale current axis vertically
-                if hscale:
-                    box = ax.get_position()
-                    ax.set_position([box.x0, box.y0, box.width, box.height * hscale])
+                self.subplot(ax, kind, params=pdict, idx=idx, **kwargs)
                 if not subplot:
-                    ax.legend(prop=fontP, **legend)
-                ax.set_xlabel(xlabel)
-                if not subplot or p == 1:
-                    ax.set_ylabel(ylabel)
-                if title == self.name:
-                    ax.set_title(title + ': ' + tsuff)
-                elif title:
-                    ax.set_title(title % pdict)
-                ax.grid()
-                ax.set_xlim(left=xmin, right=xmax)
-                ax.set_ylim(bottom=ymin, top=ymax)
-                if hidexticks:
-                    xticks = ax.xaxis.get_major_ticks()
-                    for i in hidexticks:
-                        xticks[i].label.set_visible(False)
-                if not subplot:
+                    outline += ['<tr>']
                     save(fig, '%s_%s_%s' % (figname, kind, fsuff), outline)
-            outline += ['</tr>']
-        fname = '%s_%s_%s%s.html' % (figname, xaxis, '_'.join(groups), '_speedup' if speedup else '')
-        with open(path.join(plotdir, fname), 'w') as f:
-            f.write('\n'.join(outline))
-        if subplot:
-            for kind in kinds.split(','):
-                fig = figs[kind]['fig']
+                    outline += ['</tr>']
+            if subplot:
                 # Remove space between subplots
                 fig.subplots_adjust(wspace=0)
                 # Hide y ticks for all but left plot
                 plt.setp([a.get_yticklabels() for a in fig.axes[1:]], visible=False)
-                fig.legend(figs[kind]['lines'], figs[kind]['labels'], prop=fontP, **legend)
+                lhandles, llabels = ax.get_legend_handles_labels()
+                fig.legend(lhandles, llabels, prop=fontP, **legend)
+                outline += ['<tr>']
                 save(fig, '%s_%s' % (figname, kind), outline)
+                outline += ['</tr>']
+            fname = '%s_%s_%s_%s.html' % (figname, xaxis, '_'.join(groups), kind)
+            with open(path.join(plotdir, fname), 'w') as f:
+                f.write('\n'.join(outline))
 
     def archive(self, dirname=None):
         """Archive results, profiles and plots in a timestamped directory."""
