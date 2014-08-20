@@ -527,6 +527,7 @@ class Benchmark(object):
                 be plotted along the entire length of the axis
             * colormap: color map to cycle through
             * hidexticks: list of indices of xtick labels to hide
+            * hideyticks: list of indices of ytick labels to hide
             * hscale: scale factor for height of the plot
             * labels: either a dictionary of one label per group or "compact",
                 to generate short labels with only the parameter values, or
@@ -564,6 +565,7 @@ class Benchmark(object):
         baseline = kwargs.get('baseline')
         colormap = kwargs.pop('colormap', self.colormap)
         hidexticks = kwargs.pop('hidexticks', None)
+        hideyticks = kwargs.pop('hideyticks', None)
         hscale = kwargs.get('hscale')
         labels = kwargs.get('labels', 'compact')
         legend = kwargs.get('legend', {'loc': 'best'})
@@ -725,6 +727,10 @@ class Benchmark(object):
             xticks = ax.xaxis.get_major_ticks()
             for i in hidexticks:
                 xticks[i].label.set_visible(False)
+        if hideyticks:
+            yticks = ax.yaxis.get_major_ticks()
+            for i in hideyticks:
+                yticks[i].label.set_visible(False)
 
     def plot(self, xaxis, **kwargs):
         """Plot results.
