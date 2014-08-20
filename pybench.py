@@ -1,6 +1,7 @@
 from argparse import ArgumentParser
 from collections import defaultdict
 from contextlib import contextmanager
+from copy import copy
 from cProfile import Profile
 from datetime import datetime
 from functools import wraps
@@ -741,12 +742,12 @@ class Benchmark(object):
             * figname: base name of output file
             * figsize: figure size (defaults to (9, 6))
             * params: benchmark parameters
-            * xvals: values to use for x axis (overrides parameters)
             * groups: list of parameters to group (group parameters will be
                 shown in the same plot rather than creating multiple plots)
             * legend: dictionary of legend options, passed as keyword argument
-                to the matplotlib legend function
+                to the matplotlib legend function or False to suppress legend
             * format: comma-separated list of output formats (defaults to svg)
+            * hspace: height of space between subplots
             * plotdir: output directory
             * kinds: comma-separated list of kinds of plots:
                 * bar: bar plot
@@ -757,8 +758,19 @@ class Benchmark(object):
                 * semilogx: plot with logarithmic x-axis
                 * semilogy: plot with logarithmic y-axis
                 * loglog: log-log plot
+            * sharex: share x axis (only for subplots)
+            * sharey: share y axis (only for subplots)
             * subplot: instead of creating multiple plots, put them side by
                 side as subplots with a shared y-axis (defaults to `False`)
+            * subplots: create multiple subplots (2-tuple with number of rows
+                and columns for the subplots)
+            * subplotargs: subplot arguments (used in combination with
+                subplots), dictionary with an entry for each row/column given
+                by subplots. Yes are row, column and values are dictionaries
+                of parameters overriding keyword arguments for each individual
+                subplot
+            * wspace: width of space between subplots
+            * xvals: values to use for x axis (overrides parameters)
         """
         if rank > 0:
             return
@@ -768,9 +780,17 @@ class Benchmark(object):
         groups = kwargs.get('groups', [])
         legend = kwargs.get('legend', {'loc': 'best'})
         format = kwargs.pop('format', 'svg')
+        hspace = kwargs.get('hspace')
         plotdir = kwargs.pop('plotdir', self.plotdir)
         kinds = kwargs.pop('kinds', 'plot')
+        sharex = kwargs.get('sharex')
+        sharey = kwargs.get('sharey')
         subplot = kwargs.get('subplot')
+        subplots = kwargs.get('subplots')
+        subplotargs = kwargs.get('subplotargs')
+        wspace = kwargs.get('wspace')
+        if subplots:
+            title = kwargs.pop('title', None)
         if not path.exists(plotdir):
             makedirs(plotdir)
 
@@ -804,24 +824,46 @@ class Benchmark(object):
             for p, pv in enumerate(product(*pvals), 1):
                 pdict = zip(pkeys, pv)
                 fsuff = '_'.join('%s%s' % (k, str(v).replace('.', '_')) for k, v in zip(pkeys, pv))
-                if subplot:
+                if subplots:
+                    nrows, ncols = subplots
+                    fig, ax = plt.subplots(nrows, ncols, sharex, sharey,
+                                           num=figname + '_' + fsuff,
+                                           figsize=figsize, dpi=300)
+                    for r in range(nrows):
+                        for c in range(ncols):
+                            kargs = copy(kwargs)
+                            kargs['title'] = None
+                            kargs['axis'] = 'tight'
+                            kargs.update(subplotargs[r, c])
+                            self.subplot(ax[r][c], kind, params=pdict, idx=idx, **kargs)
+                    # Adjust space between subplots
+                    fig.subplots_adjust(hspace=hspace, wspace=wspace)
+                    if title:
+                        fig.suptitle(title)
+                    if legend and legend != {'loc': 'best'}:
+                        lhandles, llabels = ax[r][c].get_legend_handles_labels()
+                        fig.legend(lhandles, llabels, prop=fontP, **legend)
+                    outline += ['<tr>']
+                    save(fig, '%s_%s_%s' % (figname, kind, fsuff), outline)
+                    outline += ['</tr>']
+                elif subplot:
                     ax = fig.add_subplot(1, nv, p, sharey=(axes[p-2] if p > 1 else None))
                     axes.append(ax)
                     kwargs['legend'] = False
                     kwargs['axis'] = 'tight'
                     if p > 1:
                         kwargs['ylabel'] = None
-                if not subplot:
+                    self.subplot(ax, kind, params=pdict, idx=idx, **kwargs)
+                else:
                     fig = plt.figure(figname + '_' + fsuff, figsize=figsize, dpi=300)
                     ax = fig.add_subplot(111)
-                self.subplot(ax, kind, params=pdict, idx=idx, **kwargs)
-                if not subplot:
+                    self.subplot(ax, kind, params=pdict, idx=idx, **kwargs)
                     outline += ['<tr>']
                     save(fig, '%s_%s_%s' % (figname, kind, fsuff), outline)
                     outline += ['</tr>']
             if subplot:
                 # Remove space between subplots
-                fig.subplots_adjust(wspace=0)
+                fig.subplots_adjust(hspace=hspace, wspace=wspace)
                 # Hide y ticks for all but left plot
                 plt.setp([a.get_yticklabels() for a in fig.axes[1:]], visible=False)
                 lhandles, llabels = ax.get_legend_handles_labels()
