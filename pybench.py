@@ -591,7 +591,8 @@ class Benchmark(object):
         ymax = kwargs.get('ymax')
         ymin = kwargs.get('ymin')
 
-        groups, gvals = zip(*kwargs.pop('groups'))
+        groups = kwargs.pop('groups')
+        groups, gvals = zip(*groups) if groups else [], []
         params = kwargs.pop('params')
         pvals = zip(*params)[1]
         idx = kwargs.get('idx', [0])
