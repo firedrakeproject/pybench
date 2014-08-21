@@ -543,6 +543,7 @@ class Benchmark(object):
             * speedup: tuple of either the same length as groups (speedup
                 relative to a specimen in the group) or 1 + length of groups
                 (speedup relative to a single data point)
+            * ticksize: custom tick label size
             * timings: benchmark timings
             * title: plot title (defaults to the name property)
             * transform: function to transform the y-values (receives x-values
@@ -572,6 +573,7 @@ class Benchmark(object):
         legend = kwargs.get('legend', {'loc': 'best'})
         linewidth = kwargs.pop('linewidth', 2)
         regions = kwargs.pop('regions', self.result['regions'])
+        ticksize = kwargs.get('ticksize')
         timings = kwargs.pop('timings', self.result['timings'])
         title = kwargs.pop('title', self.name)
         transform = kwargs.get('transform')
@@ -733,6 +735,9 @@ class Benchmark(object):
             yticks = ax.yaxis.get_major_ticks()
             for i in hideyticks:
                 yticks[i].label.set_visible(False)
+        if ticksize:
+            ax.tick_params(axis='both', which='major',
+                           labelsize=ticksize)
 
     def plot(self, xaxis, **kwargs):
         """Plot results.
