@@ -783,8 +783,8 @@ class Benchmark(object):
         hspace = kwargs.get('hspace')
         plotdir = kwargs.pop('plotdir', self.plotdir)
         kinds = kwargs.pop('kinds', 'plot')
-        sharex = kwargs.get('sharex')
-        sharey = kwargs.get('sharey')
+        sharex = kwargs.get('sharex', 'none')
+        sharey = kwargs.get('sharey', 'none')
         subplot = kwargs.get('subplot')
         subplots = kwargs.get('subplots')
         subplotargs = kwargs.get('subplotargs')
@@ -828,6 +828,7 @@ class Benchmark(object):
                     nrows, ncols = subplots
                     fig, ax = plt.subplots(nrows, ncols, sharex, sharey,
                                            num=figname + '_' + fsuff,
+                                           squeeze=False,
                                            figsize=figsize, dpi=300)
                     for r in range(nrows):
                         for c in range(ncols):
