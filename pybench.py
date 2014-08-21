@@ -850,11 +850,14 @@ class Benchmark(object):
                 elif subplot:
                     ax = fig.add_subplot(1, nv, p, sharey=(axes[p-2] if p > 1 else None))
                     axes.append(ax)
-                    kwargs['legend'] = False
-                    kwargs['axis'] = 'tight'
+                    kargs = copy(kwargs)
+                    kargs['legend'] = False
+                    kargs['axis'] = 'tight'
                     if p > 1:
-                        kwargs['ylabel'] = None
-                    self.subplot(ax, kind, params=pdict, idx=idx, **kwargs)
+                        kargs['ylabel'] = None
+                    if subplotargs:
+                        kargs.update(subplotargs[p])
+                    self.subplot(ax, kind, params=pdict, idx=idx, **kargs)
                 else:
                     fig = plt.figure(figname + '_' + fsuff, figsize=figsize, dpi=300)
                     ax = fig.add_subplot(111)
