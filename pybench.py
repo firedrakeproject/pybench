@@ -753,6 +753,7 @@ class Benchmark(object):
                 to the matplotlib legend function or False to suppress legend
             * format: comma-separated list of output formats (defaults to svg)
             * hspace: height of space between subplots
+            * html: generate an html overview page for plots
             * plotdir: output directory
             * kinds: comma-separated list of kinds of plots:
                 * bar: bar plot
@@ -786,6 +787,7 @@ class Benchmark(object):
         legend = kwargs.get('legend', {'loc': 'best'})
         format = kwargs.pop('format', 'svg')
         hspace = kwargs.get('hspace')
+        html = kwargs.get('html')
         plotdir = kwargs.pop('plotdir', self.plotdir)
         kinds = kwargs.pop('kinds', 'plot')
         sharex = kwargs.get('sharex', 'none')
@@ -880,9 +882,10 @@ class Benchmark(object):
                 outline += ['<tr>']
                 save(fig, '%s_%s' % (figname, kind), outline)
                 outline += ['</tr>']
-            fname = '%s_%s_%s_%s.html' % (figname, xaxis, '_'.join(groups), kind)
-            with open(path.join(plotdir, fname), 'w') as f:
-                f.write('\n'.join(outline))
+            if html:
+                fname = '%s_%s_%s_%s.html' % (figname, xaxis, '_'.join(groups), kind)
+                with open(path.join(plotdir, fname), 'w') as f:
+                    f.write('\n'.join(outline))
 
     def archive(self, dirname=None):
         """Archive results, profiles and plots in a timestamped directory."""
