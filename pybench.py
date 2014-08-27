@@ -674,15 +674,11 @@ class Benchmark(object):
                                 bottom=ystack[group(r)], label=label,
                                 color=colors[ir], hatch=fillstyles[g % 4],
                                 log=kind == 'barstackedlog')
-                    ax.set_xticks(xticks)
-                    ax.set_xticklabels(xvalues)
                     ystack[group(r)] += yvals
                 elif kind in ['bar', 'barlog']:
                     line = plot(offset + i * w, yvals, w, label=label,
                                 color=colors[ir], hatch=fillstyles[g % 4],
                                 log=kind == 'barlog')
-                    ax.set_xticks(xticks)
-                    ax.set_xticklabels(xvalues)
                 else:
                     if baseline and baseline[0] in gv:
                         line, = plot(xvalues, yvals, label=label, lw=linewidth, color='k')
@@ -695,15 +691,6 @@ class Benchmark(object):
                         line, = plot(xvalues, yvals, label=label, lw=linewidth,
                                      linestyle=linestyles[(g if nregions > ngroups else ir) % 4],
                                      **plotstyle.get(r, {}))
-                    if xticklabels:
-                        ax.set_xticks(xvalues)
-                        ax.set_xticklabels(xticklabels)
-                    if xtickbins and kind == 'plot':
-                        ax.locator_params(axis='x', nbins=xtickbins)
-                    if axis == 'tight':
-                        ax.axis('tight')
-                        x0, x1, y0, y1 = ax.axis()
-                        ax.axis([x0 * .9, x1 * 1.1, y0 * 0.9, y1 * 1.1])
                 i += 1
         # Scale current axis horizontally
         if wscale:
@@ -727,6 +714,15 @@ class Benchmark(object):
         ax.grid()
         ax.set_xlim(left=xmin, right=xmax)
         ax.set_ylim(bottom=ymin, top=ymax)
+        if xticklabels or kind in ['barstacked', 'barstackedlog', 'bar', 'barlog']:
+            ax.set_xticks(xvalues)
+            ax.set_xticklabels(xticklabels)
+        if xtickbins and kind == 'plot':
+            ax.locator_params(axis='x', nbins=xtickbins)
+        if axis == 'tight':
+            ax.axis('tight')
+            x0, x1, y0, y1 = ax.axis()
+            ax.axis([x0 * .9, x1 * 1.1, y0 * 0.9, y1 * 1.1])
         if hidexticks:
             xticks = ax.xaxis.get_major_ticks()
             for i in hidexticks:
