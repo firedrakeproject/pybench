@@ -535,6 +535,8 @@ class Benchmark(object):
                 "long", which includes parameter names and values
             * legend: dictionary of legend options, passed as keyword argument
                 to the matplotlib legend function
+            * lines: additional lines to plot (list of pairs of y-values, where
+                scalars are usef for all x-values, and a dict with line styles)
             * linewidth: line width of plots (defaults to 2)
             * plotstyle: plot style to use for each timed region (nested
                 dictionary with a key per region and a dictionary of plot
@@ -571,6 +573,7 @@ class Benchmark(object):
         hscale = kwargs.get('hscale')
         labels = kwargs.get('labels', 'compact')
         legend = kwargs.get('legend', {'loc': 'best'})
+        lines = kwargs.get('lines', [])
         linewidth = kwargs.pop('linewidth', 2)
         regions = kwargs.pop('regions', self.result['regions'])
         ticksize = kwargs.get('ticksize')
@@ -692,6 +695,11 @@ class Benchmark(object):
                                      linestyle=linestyles[(g if nregions > ngroups else ir) % 4],
                                      **plotstyle.get(r, {}))
                 i += 1
+        # Plot custom lines
+        for yvals, kargs in lines:
+            if np.isscalar(yvals):
+                yvals = [yvals] * len(xvalues)
+            plot(xvalues, yvals, **kargs)
         # Scale current axis horizontally
         if wscale:
             box = ax.get_position()
