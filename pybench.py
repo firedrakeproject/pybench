@@ -335,6 +335,8 @@ class Benchmark(object):
                 print 'Benchmark', name, 'for parameters', pstr, 'series', sstr
             kwargs.update(dict(zip(pkeys, pvalues)))
 
+            if rank == 0:
+                print '  Running', warmups, 'warmup runs'
             for _ in range(warmups):
                 method(**kwargs)
 
@@ -343,6 +345,8 @@ class Benchmark(object):
                 with self.timed_region('total'):
                     method(**kwargs)
                 return self.regions
+            if rank == 0:
+                print '  Running', repeats, 'benchmark runs'
             times = [bench() for _ in range(repeats)]
             # Average over all timed regions
             times = dict((k, average(d[k] for d in times))
