@@ -328,6 +328,7 @@ class Benchmark(object):
             pkeys, pvals = zip(*params)
         else:
             pkeys, pvals = (), ()
+        self.meta['start_time'] = str(datetime.now())
         for pvalues in product(*pvals):
             if rank == 0:
                 pstr = ', '.join('%s=%s' % (k, v) for k, v in zip(pkeys, pvalues))
@@ -355,6 +356,7 @@ class Benchmark(object):
                 timings[pvalues] = times
             else:
                 self.result['timings'] = times
+        self.meta['end_time'] = str(datetime.now())
         return self.result
 
     def _file(self, filename=None, suffix=None):
