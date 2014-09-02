@@ -24,7 +24,7 @@ try:
     fontP.set_size('small')
     import matplotlib.pyplot as plt
     import numpy as np
-except ImportError:
+except (ImportError, AttributeError):
     warn("Importing matplotlib failed, plot functionality not available.")
 
 try:
