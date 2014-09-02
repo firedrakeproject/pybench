@@ -8,7 +8,7 @@ from functools import wraps
 from inspect import getfile
 from itertools import product
 import json
-from os import path, makedirs
+from os import getenv, path, makedirs
 from pprint import pprint
 import shutil
 from subprocess import call
@@ -147,6 +147,10 @@ class Benchmark(object):
             self.method = getattr(self, self.method, self.method)
         self.regions = defaultdict(float)
         self.profiles = {}
+        if getenv('PBS_JOBID'):
+            self.meta['jobid'] = getenv('PBS_JOBID')
+        if getenv('PBS_JOBNAME'):
+            self.meta['jobname'] = getenv('PBS_JOBNAME')
 
     @property
     def name(self):
