@@ -227,6 +227,7 @@ class Benchmark(object):
 
         :param kwargs: any keyword arguments are forwarded to the parser"""
         args, extra = self.parser(**kwargs).parse_known_args()
+        extra = filter(lambda s: '=' in s, extra)
         # Any extra arguments are passed on to the method, but need converting
         # to the right type first
         f = self.method.im_func
