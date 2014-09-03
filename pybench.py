@@ -275,7 +275,10 @@ class Benchmark(object):
         out = path.join(profiledir, name)
         if rank == 0 and not path.exists(profiledir):
             makedirs(profiledir)
-        pkeys, pvals = zip(*params)
+        if params:
+            pkeys, pvals = zip(*params)
+        else:
+            pkeys, pvals = (), ()
         for pvalues in product(*pvals):
             if rank == 0:
                 print 'Profile', name, 'for parameters', ', '.join('%s=%s' % (k, v) for k, v in zip(pkeys, pvalues))
