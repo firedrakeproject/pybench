@@ -252,7 +252,7 @@ class Benchmark(object):
             for xaxis in args.plot:
                 self.plot(xaxis)
         if args.profile:
-            self.profile()
+            self.profile(**fargs)
 
     def profile(self, **kwargs):
         """Create a profile for the given benchmark.
@@ -282,16 +282,16 @@ class Benchmark(object):
         for pvalues in product(*pvals):
             if rank == 0:
                 print 'Profile', name, 'for parameters', ', '.join('%s=%s' % (k, v) for k, v in zip(pkeys, pvalues))
-            kargs = dict(zip(pkeys, pvalues))
+            kwargs.update(dict(zip(pkeys, pvalues)))
             # Dry run
-            method(**kargs)
-            suff = '_'.join('%s%s' % (k, v) for k, v in kargs.items())
+            method(**kwargs)
+            suff = '_'.join('%s%s' % (k, v) for k, v in zip(pkeys, pvals))
             for r in regions:
                 self.profiles[r] = Profile()
             if 'total' in regions:
-                self.profiles['total'].runcall(method, **kargs)
+                self.profiles['total'].runcall(method, **kwargs)
             else:
-                method(**kargs)
+                method(**kwargs)
             if rank == 0:
                 for r in regions:
                     statfile = '%s_%s_%s' % (out, suff, r.replace(' ', ''))
