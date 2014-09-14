@@ -700,14 +700,16 @@ class Benchmark(object):
                     if baseline and baseline[0] in gv:
                         line, = plot(xvalues, yvals, label=label, lw=linewidth, color='k')
                     else:
+                        linestyle = linestyles[(g if nregions >= ngroups else ir) % 4]
                         if trendline:
-                            tl, = plot(xvalues, xvalues[0]*yvals[0]/xvalues, lw=1, color='k', label=trendline)
+                            tl, = plot(xvalues, xvalues[0]*yvals[0]/xvalues,
+                                       lw=1, color='k', linestyle=linestyle,
+                                       label=trendline)
                             # prevent creating multiple legend entried
                             # (labels starting with _ are ignored)
                             trendline = '_'
                         line, = plot(xvalues, yvals, label=label, lw=linewidth,
-                                     linestyle=linestyles[(g if nregions > ngroups else ir) % 4],
-                                     **plotstyle.get(r, {}))
+                                     linestyle=linestyle, **plotstyle.get(r, {}))
                 i += 1
         # Plot custom lines
         for yvals, kargs in lines:
