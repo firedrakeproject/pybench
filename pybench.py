@@ -387,7 +387,10 @@ class Benchmark(object):
     def load(self, filename=None, suffix=None):
         """Load results from a file specified by given `filename` and `suffix`,
         which default to the global name and suffix attributes if not given."""
-        self.result = self._read(filename)
+        try:
+            self.result = self._read(filename)
+        except IOError:
+            self.result = {}
         return self.result
 
     def save(self, filename=None, suffix=None):
