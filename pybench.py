@@ -125,6 +125,8 @@ class Benchmark(object):
     """Regions to create profile graphs for."""
     meta = {}
     """Metadata to include in result output."""
+    result = {}
+    """Results data, including timings."""
     series = {}
     """Benchmark series created from several invocations of the script e.g.
     for parallel runs on variable number of processors."""
@@ -319,7 +321,7 @@ class Benchmark(object):
         warmups = kwargs.pop('warmups', self.warmups)
         average = kwargs.pop('average', self.average)
 
-        timings = {}
+        timings = self.result.get('timings') or {}
         self.result = {'name': name,
                        'description': description,
                        'params': params,
@@ -453,7 +455,7 @@ class Benchmark(object):
             self.params = self.params + series
             pkeys, pvals = zip(*self.params)
         result = {'name': self.name, 'params': self.params}
-        timings = self.result['timings'] if hasattr(self, 'result') else {}
+        timings = self.result.get('timings') or {}
         skeys, svals = zip(*series)
         for svalues in product(*svals):
             suff = '_'.join('%s%s' % (k, v) for k, v in zip(skeys, svalues))
