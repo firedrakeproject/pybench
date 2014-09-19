@@ -238,14 +238,14 @@ class Benchmark(object):
         defaults = dict(zip(f.func_code.co_varnames[1:f.func_code.co_argcount], f.func_defaults))
         convert = lambda k, v: (k, type(defaults[k])(v))
         fargs = dict(convert(*a.split('=')) for a in extra)
+        if args.load or args.load is None:
+            self.load(args.load)
         if args.run:
             self.method(**fargs)
         if args.benchmark:
             self.run(**fargs)
         if args.save or args.save is None:
             self.save(args.save)
-        if args.load or args.load is None:
-            self.load(args.load)
         if args.combine:
             self.combine(args.combine)
         if args.plot:
