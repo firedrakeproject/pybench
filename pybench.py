@@ -741,8 +741,6 @@ class Benchmark(object):
         elif title:
             ax.set_title(title % dict(params))
         ax.grid()
-        ax.set_xlim(left=xmin, right=xmax)
-        ax.set_ylim(bottom=ymin, top=ymax)
         if xticklabels or kind in ['barstacked', 'barstackedlog', 'bar', 'barlog']:
             ax.set_xticks(xvalues)
             ax.set_xticklabels(xticklabels)
@@ -752,6 +750,8 @@ class Benchmark(object):
             ax.axis('tight')
             x0, x1, y0, y1 = ax.axis()
             ax.axis([x0 * .9, x1 * 1.1, y0 * 0.9, y1 * 1.1])
+        ax.set_xlim(left=xmin, right=xmax)
+        ax.set_ylim(bottom=ymin, top=ymax)
         if hidexticks:
             xticks = ax.xaxis.get_major_ticks()
             for i in hidexticks:
