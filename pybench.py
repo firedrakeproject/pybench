@@ -155,6 +155,8 @@ class Benchmark(object):
             self.method = getattr(self, self.method, self.method)
         self.regions = defaultdict(float)
         self.profiles = {}
+        if getenv('HOSTNAME'):
+            self.meta['hostname'] = getenv('HOSTNAME')
         if getenv('PBS_JOBID'):
             self.meta['jobid'] = getenv('PBS_JOBID')
         if getenv('PBS_JOBNAME'):
