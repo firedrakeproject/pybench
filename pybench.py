@@ -162,6 +162,8 @@ class Benchmark(object):
             self.method = getattr(self, self.method, self.method)
         self.regions = defaultdict(float)
         self.profiles = {}
+        self.meta['benchmark_version'] = get_git_revision()
+        self.meta['pybench_version'] = get_git_revision(path.dirname(__file__))
         if getenv('HOSTNAME'):
             self.meta['hostname'] = getenv('HOSTNAME')
         if getenv('PBS_JOBID'):
