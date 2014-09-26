@@ -11,7 +11,7 @@ import json
 from os import getenv, path, makedirs
 from pprint import pprint
 import shutil
-from subprocess import call
+from subprocess import call, check_output, CalledProcessError
 import time
 from warnings import warn
 
@@ -72,6 +72,13 @@ tex_table = """
 %{- endfor %}
 \\end{tabulary}
 """
+
+
+def get_git_revision(cwd=None):
+    try:
+        return check_output(['git', 'rev-parse', 'HEAD'], cwd=cwd).strip()
+    except CalledProcessError:
+        return 'unknown'
 
 
 def timed(f):
