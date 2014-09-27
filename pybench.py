@@ -445,13 +445,15 @@ class Benchmark(object):
         self.result = result
         return result
 
-    def combine_series(self, series, filename=None, merge=False):
+    def combine_series(self, series, filename=None, aggregate={}, merge=False):
         """Combine the results of one or more series of benchmarks.
 
         :param series: a dictionary with the series names as keys and the list
             of values defing the series as value.
         :param filename: the basename for the files to combine (defaults to the
             global name property if not given)
+        :param aggregate: dictionary of regions to aggregate where the key is
+            the resulting region and the value is a list of regions to sum
         :param merge: if set to `True`, the given series is merged with the
             existing parameter values. The default setting of `False` assumes
             that all series are added as new parameters.
@@ -484,6 +486,11 @@ class Benchmark(object):
                 continue
             for key in ['description', 'meta', 'regions']:
                 result[key] = res[key]
+            for target, regions in aggregate.items():
+                # FIXME: this won't currently work with a param series
+                if all([r in res['timings'] for r in regions]):
+                    res['timings'][target] = sum(res['timings'][region]
+                                                 for region in regions)
             if pkeys == skeys:
                 timings[svalues] = res['timings']
             else:
