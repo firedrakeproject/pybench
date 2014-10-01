@@ -766,7 +766,7 @@ class Benchmark(object):
             ax.set_title(title % dict(params))
         ax.grid()
         if xticklabels or kind in ['barstacked', 'barstackedlog', 'bar', 'barlog']:
-            ax.set_xticks(xvalues)
+            ax.set_xticks(offset + i * w / 2)
             ax.set_xticklabels(xticklabels)
         if xtickbins and kind == 'plot':
             ax.locator_params(axis='x', nbins=xtickbins)
