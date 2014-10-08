@@ -765,11 +765,12 @@ class Benchmark(object):
         elif title:
             ax.set_title(title % dict(params))
         ax.grid()
-        if xticklabels:
-            ax.set_xticks(xvalues)
-            ax.set_xticklabels(xticklabels)
         if kind in ['barstacked', 'barstackedlog', 'bar', 'barlog']:
             ax.set_xticks(offset + i * w / 2)
+        elif xvalues:
+            ax.set_xticks(xvalues)
+        if xticklabels:
+            ax.set_xticklabels(xticklabels)
         if xtickbins and kind == 'plot':
             ax.locator_params(axis='x', nbins=xtickbins)
         if axis == 'tight':
