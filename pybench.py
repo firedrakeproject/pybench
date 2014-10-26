@@ -129,6 +129,8 @@ class Benchmark(object):
     passed straight to the matplotlib plot function."""
     colormap = 'Set2'
     """The matplotlib colormap to cycle through."""
+    colors = []
+    """The colors to cycle through (overrides colormap)."""
     profilegraph = {}
     """Options for creating the profile graph with gprof2dot:
         * node_threshold: eliminate nodes below this threshold
@@ -570,6 +572,7 @@ class Benchmark(object):
                 (needs to be part of groups) and a value along the x-axis, to
                 be plotted along the entire length of the axis
             * colormap: color map to cycle through
+            * colors: colors to cycle through (overrides colormap)
             * hidexticks: list of indices of xtick labels to hide
             * hideyticks: list of indices of ytick labels to hide
             * hscale: scale factor for height of the plot
@@ -611,6 +614,7 @@ class Benchmark(object):
         bargroups = kwargs.get('bargroups', [''])
         baseline = kwargs.get('baseline')
         colormap = kwargs.pop('colormap', self.colormap)
+        colors = kwargs.pop('colors', self.colors)
         hidexticks = kwargs.pop('hidexticks', None)
         hideyticks = kwargs.pop('hideyticks', None)
         hscale = kwargs.get('hscale')
@@ -654,10 +658,13 @@ class Benchmark(object):
             gvals = list(gvals)
             for i, s in enumerate(speedup):
                 gvals[i] = filter(lambda x: x != s, gvals[i])
-        # Set the default color cycle according to the given color map
-        cmap = mpl.cm.get_cmap(name=colormap)
-        # Colour by region or group, whichever there are more of
-        colors = [cmap(i) for i in np.linspace(0, 0.9, max(nregions, ngroups))]
+        if colors:
+            colors = colors[:max(nregions, ngroups)]
+        else:
+            # Set the default color cycle according to the given color map
+            cmap = mpl.cm.get_cmap(name=colormap)
+            # Colour by region or group, whichever there are more of
+            colors = [cmap(i) for i in np.linspace(0, 0.9, max(nregions, ngroups))]
         ax.set_color_cycle(colors)
         linestyles = ('solid', 'dashed', 'dashdot', 'dotted')
         fillstyles = ('', '/', '\\', '-')
