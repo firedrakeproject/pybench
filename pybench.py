@@ -851,6 +851,7 @@ class Benchmark(object):
         kinds = kwargs.pop('kinds', 'plot')
         sharex = kwargs.get('sharex', 'none')
         sharey = kwargs.get('sharey', 'none')
+        speedup = kwargs.get('speedup')
         subplot = kwargs.get('subplot')
         subplots = kwargs.get('subplots')
         subplotargs = kwargs.get('subplotargs')
@@ -889,7 +890,10 @@ class Benchmark(object):
                 fig = plt.figure(figname + '_' + kind, figsize=figsize, dpi=300)
             for p, pv in enumerate(product(*pvals), 1):
                 pdict = zip(pkeys, pv)
-                fsuff = '_'.join('%s%s' % (k, str(v).replace('.', '_')) for k, v in zip(pkeys, pv))
+                # Add extra info for file names
+                if speedup:
+                    pdict.append(('speedup', ''.join(speedup)))
+                fsuff = '_'.join('%s%s' % (k, str(v).replace('.', '_')) for k, v in pdict)
                 if subplots:
                     nrows, ncols = subplots
                     fig, ax = plt.subplots(nrows, ncols, sharex, sharey,
