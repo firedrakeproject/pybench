@@ -890,10 +890,10 @@ class Benchmark(object):
                 fig = plt.figure(figname + '_' + kind, figsize=figsize, dpi=300)
             for p, pv in enumerate(product(*pvals), 1):
                 pdict = zip(pkeys, pv)
-                # Add extra info for file names
-                if speedup:
-                    pdict.append(('speedup', ''.join(speedup)))
                 fsuff = '_'.join('%s%s' % (k, str(v).replace('.', '_')) for k, v in pdict)
+                # Append speedup to file base name if any
+                if speedup:
+                    fsuff += '_speedup' + ''.join(speedup)
                 if subplots:
                     nrows, ncols = subplots
                     fig, ax = plt.subplots(nrows, ncols, sharex, sharey,
