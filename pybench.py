@@ -634,7 +634,6 @@ class Benchmark(object):
         xticklabels = kwargs.pop('xticklabels', None)
         xvals = kwargs.pop('xvals')
         xvalues = kwargs.pop('xvalues', xvals)
-        offset = np.arange(len(xvals)) + 0.1
         plotstyle = kwargs.pop('plotstyle', self.plotstyle)
         speedup = kwargs.get('speedup', False)
         trendline = kwargs.get('trendline')
@@ -658,6 +657,10 @@ class Benchmark(object):
             gvals = list(gvals)
             for i, s in enumerate(speedup):
                 gvals[i] = filter(lambda x: x != s, gvals[i])
+        if speedup_single:
+            if speedup[0] in xvals:
+                xvals = [i for i in xvals if i not in speedup]
+        offset = np.arange(len(xvals)) + 0.1
         if colors:
             colors = colors[:max(nregions, ngroups)]
         else:
