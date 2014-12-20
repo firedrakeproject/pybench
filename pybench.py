@@ -27,7 +27,7 @@ try:
     mpl.use("Agg")
     from matplotlib.font_manager import FontProperties
     fontP = FontProperties()
-    fontP.set_size('small')
+    fontP.set_size('x-small')
     import matplotlib.pyplot as plt
     import numpy as np
 except (ImportError, AttributeError):
@@ -766,7 +766,7 @@ class Benchmark(object):
             box = ax.get_position()
             ax.set_position([box.x0, box.y0, box.width, box.height * hscale])
         if legend is not False:
-            l = ax.legend(prop=fontP, handlelength=3, **legend)
+            l = ax.legend(prop=fontP, handlelength=4, **legend)
             l.get_frame().set_color('white')
         if xlabel:
             ax.set_xlabel(xlabel)
@@ -920,7 +920,7 @@ class Benchmark(object):
                         fig.suptitle(title)
                     if legend and legend != {'loc': 'best'}:
                         lhandles, llabels = ax[r][c].get_legend_handles_labels()
-                        l = fig.legend(lhandles, llabels, prop=fontP, handlelength=3, **legend)
+                        l = fig.legend(lhandles, llabels, prop=fontP, handlelength=4, **legend)
                         l.get_frame().set_color('white')
                     outline += ['<tr>']
                     save(fig, '%s_%s_%s' % (figname, kind, fsuff), outline)
@@ -949,7 +949,7 @@ class Benchmark(object):
                 # Hide y ticks for all but left plot
                 plt.setp([a.get_yticklabels() for a in fig.axes[1:]], visible=False)
                 lhandles, llabels = ax.get_legend_handles_labels()
-                l = fig.legend(lhandles, llabels, prop=fontP, handlelength=3, **legend)
+                l = fig.legend(lhandles, llabels, prop=fontP, handlelength=4, **legend)
                 l.get_frame().set_color('white')
                 outline += ['<tr>']
                 save(fig, '%s_%s' % (figname, kind), outline)
