@@ -766,7 +766,8 @@ class Benchmark(object):
             box = ax.get_position()
             ax.set_position([box.x0, box.y0, box.width, box.height * hscale])
         if legend is not False:
-            ax.legend(prop=fontP, **legend)
+            l = ax.legend(prop=fontP, **legend)
+            l.get_frame().set_color('white')
         if xlabel:
             ax.set_xlabel(xlabel)
         if ylabel:
@@ -919,7 +920,8 @@ class Benchmark(object):
                         fig.suptitle(title)
                     if legend and legend != {'loc': 'best'}:
                         lhandles, llabels = ax[r][c].get_legend_handles_labels()
-                        fig.legend(lhandles, llabels, prop=fontP, **legend)
+                        l = fig.legend(lhandles, llabels, prop=fontP, **legend)
+                        l.get_frame().set_color('white')
                     outline += ['<tr>']
                     save(fig, '%s_%s_%s' % (figname, kind, fsuff), outline)
                     outline += ['</tr>']
@@ -947,7 +949,8 @@ class Benchmark(object):
                 # Hide y ticks for all but left plot
                 plt.setp([a.get_yticklabels() for a in fig.axes[1:]], visible=False)
                 lhandles, llabels = ax.get_legend_handles_labels()
-                fig.legend(lhandles, llabels, prop=fontP, **legend)
+                l = fig.legend(lhandles, llabels, prop=fontP, **legend)
+                l.get_frame().set_color('white')
                 outline += ['<tr>']
                 save(fig, '%s_%s' % (figname, kind), outline)
                 outline += ['</tr>']
