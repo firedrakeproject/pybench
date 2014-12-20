@@ -728,29 +728,29 @@ class Benchmark(object):
                 if transform:
                     yvals = transform(xvals, yvals)
                 if kind in ['barstacked', 'barstackedlog']:
-                    line = plot(offset + group(r) * w, yvals, w,
-                                bottom=ystack[group(r)], label=label,
-                                color=colors[ir], hatch=fillstyles[g % 4],
-                                log=kind == 'barstackedlog')
+                    plot(offset + group(r) * w, yvals, w,
+                         bottom=ystack[group(r)], label=label,
+                         color=colors[ir], hatch=fillstyles[g % 4],
+                         log=kind == 'barstackedlog')
                     ystack[group(r)] += yvals
                 elif kind in ['bar', 'barlog']:
-                    line = plot(offset + i * w, yvals, w, label=label,
-                                color=colors[ir], hatch=fillstyles[g % 4],
-                                log=kind == 'barlog')
+                    plot(offset + i * w, yvals, w, label=label,
+                         color=colors[ir], hatch=fillstyles[g % 4],
+                         log=kind == 'barlog')
                 else:
                     if baseline and baseline[0] in gv:
-                        line, = plot(xvalues, yvals, label=label, lw=linewidth, color='k')
+                        plot(xvalues, yvals, label=label, lw=linewidth, color='k')
                     else:
                         linestyle = linestyles[(g if nregions >= ngroups else ir) % 4]
                         if trendline:
-                            tl, = plot(xvalues, xvalues[0]*yvals[0]/xvalues,
-                                       lw=1, color='k', linestyle=linestyle,
-                                       label=trendline)
+                            plot(xvalues, xvalues[0]*yvals[0]/xvalues,
+                                 lw=1, color='k', linestyle=linestyle,
+                                 label=trendline)
                             # prevent creating multiple legend entried
                             # (labels starting with _ are ignored)
                             trendline = '_'
-                        line, = plot(xvalues, yvals, label=label, lw=linewidth,
-                                     linestyle=linestyle, **plotstyle.get(r, {}))
+                        plot(xvalues, yvals, label=label, lw=linewidth,
+                             linestyle=linestyle, **plotstyle.get(r, {}))
                 i += 1
         # Plot custom lines
         for yvals, kargs in lines:
