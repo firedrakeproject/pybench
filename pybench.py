@@ -573,6 +573,7 @@ class Benchmark(object):
                 be plotted along the entire length of the axis
             * colormap: color map to cycle through
             * colors: colors to cycle through (overrides colormap)
+            * grid: enables grid lines
             * hidexticks: list of indices of xtick labels to hide
             * hideyticks: list of indices of ytick labels to hide
             * hscale: scale factor for height of the plot
@@ -615,6 +616,7 @@ class Benchmark(object):
         baseline = kwargs.get('baseline')
         colormap = kwargs.pop('colormap', self.colormap)
         colors = kwargs.pop('colors', self.colors)
+        grid = kwargs.pop('grid', False)
         hidexticks = kwargs.pop('hidexticks', None)
         hideyticks = kwargs.pop('hideyticks', None)
         hscale = kwargs.get('hscale')
@@ -774,7 +776,8 @@ class Benchmark(object):
             ax.set_title(title + ': ' + tsuff)
         elif title:
             ax.set_title(title % dict(params))
-        ax.grid()
+        if grid:
+            ax.grid()
         if kind in ['barstacked', 'barstackedlog', 'bar', 'barlog']:
             ax.set_xticks(offset + i * w / 2)
         elif xvalues:
