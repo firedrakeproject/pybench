@@ -749,7 +749,7 @@ class Benchmark(object):
                             # prevent creating multiple legend entried
                             # (labels starting with _ are ignored)
                             trendline = '_'
-                        plot(xvalues, yvals, label=label, lw=linewidth,
+                        plot(xvalues, yvals, label=label, lw=linewidth, markeredgecolor='none',
                              linestyle=linestyle, **plotstyle.get(r, {}))
                 i += 1
         # Plot custom lines
