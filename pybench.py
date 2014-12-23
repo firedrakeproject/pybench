@@ -629,7 +629,7 @@ class Benchmark(object):
         timings = kwargs.pop('timings', self.result['timings'])
         title = kwargs.pop('title', self.name)
         transform = kwargs.get('transform')
-        xlabel = kwargs.pop('xlabel')
+        xlabel = kwargs.pop('xlabel', None)
         xmax = kwargs.get('xmax')
         xmin = kwargs.get('xmin')
         xtickbins = kwargs.get('xtickbins')
@@ -842,6 +842,7 @@ class Benchmark(object):
                 of parameters overriding keyword arguments for each individual
                 subplot
             * wspace: width of space between subplots
+            * xlabel: x-axis label
             * xvals: values to use for x axis (overrides parameters)
         """
         if rank > 0:
@@ -864,6 +865,7 @@ class Benchmark(object):
         subplotargs = kwargs.get('subplotargs')
         wspace = kwargs.get('wspace')
         if subplots:
+            xlabel = kwargs.pop('xlabel', None)
             title = kwargs.pop('title', None)
         if not path.exists(plotdir):
             makedirs(plotdir)
@@ -877,7 +879,7 @@ class Benchmark(object):
 
         nv = len(list(product(*pvals)))
 
-        def save(fig, fname, outline):
+        def save(fig, fname, outline, extra_artists=[]):
             if not format:
                 fig.show()
             else:
@@ -885,7 +887,8 @@ class Benchmark(object):
                     fname += '.' + fmt
                     fig.savefig(path.join(plotdir, fname),
                                 orientation='landscape', format=fmt,
-                                transparent=True, bbox_inches='tight')
+                                transparent=True, bbox_inches='tight',
+                                bbox_extra_artists=extra_artists)
                     if fmt in ['svg', 'png']:
                         outline += ['<td><img src="%s"></td>' % fname]
             plt.close(fig)
@@ -923,8 +926,11 @@ class Benchmark(object):
                         l = fig.legend(lhandles, llabels, prop=fontP,
                                        framealpha=.5, handlelength=4, **legend)
                         l.get_frame().set_color('white')
+                    extra_artists = []
+                    if xlabel:
+                        extra_artists.append(fig.text(0.5, -0.03, xlabel, ha='center'))
                     outline += ['<tr>']
-                    save(fig, '%s_%s_%s' % (figname, kind, fsuff), outline)
+                    save(fig, '%s_%s_%s' % (figname, kind, fsuff), outline, extra_artists)
                     outline += ['</tr>']
                 elif subplot:
                     ax = fig.add_subplot(1, nv, p, sharey=(axes[p-2] if p > 1 else None))
