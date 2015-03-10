@@ -178,7 +178,7 @@ class Benchmark(object):
         """Benchmark name: produced by concatenating the benchmark attribute
         with all keys and values in the series."""
         if self.series:
-            suff = '_'.join('%s%s' % (k, v) for k, v in self.series.items())
+            suff = '_'.join('%s%s' % (k, v) for k, v in sorted(self.series.items()))
             return self.benchmark + '_' + suff
         return self.benchmark
 
@@ -343,7 +343,7 @@ class Benchmark(object):
         timings = self.result.get('timings') or {}
         self.result = {'name': name,
                        'description': description,
-                       'params': params,
+                       'params': sorted(params),
                        'repeats': repeats,
                        'warmups': warmups,
                        'average': average.__name__,
@@ -353,7 +353,7 @@ class Benchmark(object):
                        'series': self.series,
                        'timings': timings}
         if params:
-            pkeys, pvals = zip(*params)
+            pkeys, pvals = zip(*sorted(params))
         else:
             pkeys, pvals = (), ()
         self.meta['start_time'] = str(datetime.now())
@@ -462,8 +462,8 @@ class Benchmark(object):
         """
         filename = filename or self.name
         if merge:
-            pkeys, pvals = zip(*self.params)
-            for k, v in series:
+            pkeys, pvals = zip(*sorted(self.params))
+            for k, v in sorted(series):
                 # The key already exists in the params
                 if k in pkeys:
                     i = pkeys.index(k)
@@ -474,10 +474,10 @@ class Benchmark(object):
                     self.params.append((k, v))
         else:
             self.params = self.params + series
-            pkeys, pvals = zip(*self.params)
+            pkeys, pvals = zip(*sorted(self.params))
         result = {'name': self.name, 'params': self.params}
         timings = self.result.get('timings') or {}
-        skeys, svals = zip(*series)
+        skeys, svals = zip(*sorted(series))
         for svalues in product(*svals):
             suff = '_'.join('%s%s' % (k, v) for k, v in zip(skeys, svalues))
             fname = '%s_%s' % (filename, suff)
@@ -496,8 +496,10 @@ class Benchmark(object):
             if pkeys == skeys:
                 timings[svalues] = res['timings']
             else:
+                rkeys = zip(*res['params'])[0]
                 for k, v in res['timings'].items():
-                    timings[k + svalues] = v
+                    key = zip(*sorted(zip(rkeys, k) + zip(skeys, svalues)))[1]
+                    timings[key] = v
         result['timings'] = timings
         self.result = result
         return result
@@ -526,7 +528,7 @@ class Benchmark(object):
         if not path.exists(tabledir):
             makedirs(tabledir)
 
-        pkeys, pvals = zip(*params)
+        pkeys, pvals = zip(*sorted(params))
         idx = [pkeys.index(s) for s in skip]
         times = [(tuple(p for i, p in enumerate(pv) if i not in idx),
                   tuple(timings[pv][r] for r in regions))
@@ -648,7 +650,7 @@ class Benchmark(object):
         groups = kwargs.pop('groups')
         groups, gvals = zip(*groups) if groups else ([], [])
         params = kwargs.pop('params')
-        pvals = zip(*params)[1]
+        pvals = zip(*sorted(params))[1]
         idx = kwargs.get('idx', [0])
 
         nregions = len(regions)
@@ -870,7 +872,7 @@ class Benchmark(object):
         if not path.exists(plotdir):
             makedirs(plotdir)
 
-        pkeys, pvals = zip(*params)
+        pkeys, pvals = zip(*sorted(params))
         idx = [pkeys.index(a) for a in [xaxis] + groups]
         pkeys = [p for p in pkeys if p not in [xaxis] + groups]
         kwargs['xvals'] = kwargs.pop('xvals', pvals[idx[0]])
