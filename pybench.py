@@ -553,7 +553,22 @@ class Benchmark(object):
             with open(path.join(tabledir, "%s.%s" % (filename, fmt)), 'w') as f:
                 f.write(templates[fmt].render(d))
 
-    def subplot(self, ax, kind='plot', **kwargs):
+    def lookup(self, region, params, keyset=()):
+        """Retrieve a specific timing from benchmark results
+
+        :param region: timed region for which to extract the timing
+        :param params: parameter dict or tuple-list used as the key
+        :param keyset: list of name-value tuples to specify additional
+            lookup parameters
+        """
+        if isinstance(params, list):
+            params = dict(params)
+        params.update(keyset)
+        pvals = zip(*sorted(params.items()))[1]
+        timings = self.result['timings'].get(pvals)
+        return timings[region] if timings is not None else np.nan
+
+    def subplot(self, ax, xaxis, kind='plot', **kwargs):
         """Plot a graph into the given axes
 
         :param ax: the axes to plot into
@@ -647,11 +662,10 @@ class Benchmark(object):
         ymax = kwargs.get('ymax')
         ymin = kwargs.get('ymin')
 
-        groups = kwargs.pop('groups')
-        groups, gvals = zip(*groups) if groups else ([], [])
-        params = kwargs.pop('params')
+        groups = dict(kwargs.pop('groups'))
+        groups, gvals = zip(*groups.items()) if groups else ([], [])
+        params = dict(kwargs.pop('params'))
         pvals = zip(*sorted(params))[1]
-        idx = kwargs.get('idx', [0])
 
         nregions = len(regions)
         ngroups = int(np.prod([len(g) for g in gvals]))
@@ -676,13 +690,6 @@ class Benchmark(object):
         linestyles = ('solid', 'dashed', 'dashdot', 'dotted')
         fillstyles = ('', '/', '\\', '-')
 
-        def lookup(region, *args):
-            pv = pvals
-            for i, a in sorted(zip(idx, args)):
-                pv = pv[:i] + (a,) + pv[i:]
-            v = timings.get(pv)
-            return v[region] if v is not None else np.nan
-
         def group(r):
             for i, g in enumerate(bargroups):
                 if g in r:
@@ -706,10 +713,11 @@ class Benchmark(object):
         i = 0
         for g, gv in enumerate(product(*gvals)):
             for ir, r in enumerate(regions):
+                params.update(zip(groups, gv))
                 if baseline and baseline[0] in gv:
-                    yvals = np.array([lookup(r, baseline[1], *gv) for _ in xvals])
+                    yvals = np.array([self.lookup(r, params, [(xaxis, baseline[1])]) for _ in xvals])
                 else:
-                    yvals = np.array([lookup(r, v, *gv) for v in xvals])
+                    yvals = np.array([self.lookup(r, params, [(xaxis, v)]) for v in xvals])
                 if np.isnan(yvals).all():
                     continue
                 # Skip parameters used for speedup when generating label
@@ -723,10 +731,12 @@ class Benchmark(object):
                     label = labels[gv]
                 # 1) speedup relative to a specimen in the group
                 if speedup_group:
-                    yvals = np.array([lookup(r, v, *(speedup + gv[len(speedup):])) for v in xvals]) / yvals
+                    params.update(zip(groups, speedup))
+                    yvals = np.array([self.lookup(r, params, [(xaxis, v)]) for v in xvals]) / yvals
                 # 2) speedup relative to a single datapoint
                 elif speedup_single:
-                    yvals = lookup(r, *speedup) / yvals
+                    params.update(zip(groups, speedup[1:]))
+                    yvals = self.lookup(r, params, [(xaxis, speedup[0])]) / yvals
                 if transform:
                     yvals = transform(xvals, yvals)
                 if kind in ['barstacked', 'barstackedlog']:
@@ -918,7 +928,7 @@ class Benchmark(object):
                             kargs['title'] = None
                             kargs['axis'] = 'tight'
                             kargs.update(subplotargs[r, c])
-                            self.subplot(ax[r][c], kind, params=pdict, idx=idx, **kargs)
+                            self.subplot(ax[r][c], xaxis, kind, params=pdict, idx=idx, **kargs)
                     # Adjust space between subplots
                     fig.subplots_adjust(hspace=hspace, wspace=wspace)
                     if title:
@@ -944,11 +954,11 @@ class Benchmark(object):
                         kargs['ylabel'] = None
                     if subplotargs:
                         kargs.update(subplotargs[p])
-                    self.subplot(ax, kind, params=pdict, idx=idx, **kargs)
+                    self.subplot(ax, xaxis, kind, params=pdict, idx=idx, **kargs)
                 else:
                     fig = plt.figure(figname + '_' + fsuff, figsize=figsize, dpi=300)
                     ax = fig.add_subplot(111)
-                    self.subplot(ax, kind, params=pdict, idx=idx, **kwargs)
+                    self.subplot(ax, xaxis, kind, params=pdict, idx=idx, **kwargs)
                     outline += ['<tr>']
                     save(fig, '%s_%s_%s' % (figname, kind, fsuff), outline)
                     outline += ['</tr>']
