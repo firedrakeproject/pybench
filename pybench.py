@@ -861,7 +861,7 @@ class Benchmark(object):
             return
         figname = kwargs.pop('figname', self.result['name'])
         figsize = kwargs.pop('figsize', (9, 6))
-        params = kwargs.pop('params', self.result['params'])
+        params = dict(kwargs.pop('params', self.result['params']))
         groups = kwargs.get('groups', [])
         legend = kwargs.get('legend', {'loc': 'best'})
         format = kwargs.pop('format', 'svg')
@@ -882,12 +882,9 @@ class Benchmark(object):
         if not path.exists(plotdir):
             makedirs(plotdir)
 
-        pkeys, pvals = zip(*sorted(params))
-        idx = [pkeys.index(a) for a in [xaxis] + groups]
-        pkeys = [p for p in pkeys if p not in [xaxis] + groups]
-        kwargs['xvals'] = kwargs.pop('xvals', pvals[idx[0]])
-        kwargs['groups'] = zip(groups, [pvals[i] for i in idx[1:]])
-        pvals = [p for i, p in enumerate(pvals) if i not in idx]
+        kwargs['xvals'] = kwargs.pop('xvals', params.pop(xaxis))
+        kwargs['groups'] = zip(groups, [params.pop(g) for g in groups])
+        pkeys, pvals = zip(*sorted(params.items()))
 
         nv = len(list(product(*pvals)))
 
@@ -928,7 +925,7 @@ class Benchmark(object):
                             kargs['title'] = None
                             kargs['axis'] = 'tight'
                             kargs.update(subplotargs[r, c])
-                            self.subplot(ax[r][c], xaxis, kind, params=pdict, idx=idx, **kargs)
+                            self.subplot(ax[r][c], xaxis, kind, params=pdict, **kargs)
                     # Adjust space between subplots
                     fig.subplots_adjust(hspace=hspace, wspace=wspace)
                     if title:
@@ -954,11 +951,11 @@ class Benchmark(object):
                         kargs['ylabel'] = None
                     if subplotargs:
                         kargs.update(subplotargs[p])
-                    self.subplot(ax, xaxis, kind, params=pdict, idx=idx, **kargs)
+                    self.subplot(ax, xaxis, kind, params=pdict, **kargs)
                 else:
                     fig = plt.figure(figname + '_' + fsuff, figsize=figsize, dpi=300)
                     ax = fig.add_subplot(111)
-                    self.subplot(ax, xaxis, kind, params=pdict, idx=idx, **kwargs)
+                    self.subplot(ax, xaxis, kind, params=pdict, **kwargs)
                     outline += ['<tr>']
                     save(fig, '%s_%s_%s' % (figname, kind, fsuff), outline)
                     outline += ['</tr>']
