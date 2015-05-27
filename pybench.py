@@ -257,7 +257,9 @@ class Benchmark(object):
         # to the right type first
         f = self.method.im_func
         defaults = dict(zip(f.func_code.co_varnames[1:f.func_code.co_argcount], f.func_defaults))
-        convert = lambda k, v: (k, type(defaults[k])(v))
+        # Caveat: bool("any_string") is always True, but bool("") is always False
+        convert = lambda k, v: (k, v in ['True', 'true'] if isinstance(defaults[k], bool)
+                                else type(defaults[k])(v))
         fargs = dict(convert(*a.split('=')) for a in extra)
         if args.load or args.load is None:
             self.load(args.load)
