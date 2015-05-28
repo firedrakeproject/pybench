@@ -22,4 +22,4 @@ setup(name='pybench',
           'Programming Language :: Python :: 2.6',
           'Programming Language :: Python :: 2.7',
       ],
-      py_modules=['pybench'])
+      packages=['pybench'])

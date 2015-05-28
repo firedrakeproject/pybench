@@ -15,12 +15,6 @@ from subprocess import call, check_output, CalledProcessError
 import time
 from warnings import warn
 
-# Use README as module documentation
-readme = path.join(path.dirname(__file__), 'README.rst')
-if path.exists(readme):
-    with open(readme) as f:
-        __doc__ = f.read()
-
 # Imports for plot, warn if those fail but do not die
 try:
     import matplotlib as mpl
