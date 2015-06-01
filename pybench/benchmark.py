@@ -521,6 +521,7 @@ class Benchmark(object):
             * timings: benchmark timings
             * skip: parameters to skip
             * format: comma-separated list of output formats (html, latex, both)
+            * precision: precision of floating point values
         """
         if rank > 0:
             return
@@ -536,6 +537,7 @@ class Benchmark(object):
         formats = kwargs.pop('format', 'html').split(',')
         if not path.exists(tabledir):
             makedirs(tabledir)
+        pd.set_option('display.precision', kwargs.pop('precision', 4))
 
         # Reset the index only if it is a MultiIndex
         if hasattr(df.index, 'levels'):
