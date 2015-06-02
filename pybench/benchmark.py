@@ -494,9 +494,7 @@ class Benchmark(object):
         if isinstance(params, list):
             params = dict(params)
         params.update(keyset)
-        pvals = zip(*sorted(params.items()))[1]
-        timings = self.result['timings'].get(pvals)
-        return timings[region] if timings is not None else np.nan
+        return self(region=region, **params)
 
     def subplot(self, ax, xaxis, kind='plot', **kwargs):
         """Plot a graph into the given axes
@@ -571,9 +569,8 @@ class Benchmark(object):
         legend = kwargs.get('legend', {'loc': 'best'})
         lines = kwargs.get('lines', [])
         linewidth = kwargs.pop('linewidth', 2)
-        regions = kwargs.pop('regions', self.result['regions'])
+        regions = kwargs.pop('regions', self.regions)
         ticksize = kwargs.get('ticksize')
-        timings = kwargs.pop('timings', self.result['timings'])
         title = kwargs.pop('title', self.name)
         transform = kwargs.get('transform')
         xlabel = kwargs.pop('xlabel', None)
@@ -595,7 +592,6 @@ class Benchmark(object):
         groups = dict(kwargs.pop('groups'))
         groups, gvals = zip(*groups.items()) if groups else ([], [])
         params = dict(kwargs.pop('params'))
-        pvals = zip(*sorted(params))[1]
 
         nregions = len(regions)
         ngroups = int(np.prod([len(g) for g in gvals]))
@@ -789,9 +785,9 @@ class Benchmark(object):
         """
         if rank > 0:
             return
-        figname = kwargs.pop('figname', self.result['name'])
+        figname = kwargs.pop('figname', self.name)
         figsize = kwargs.pop('figsize', (9, 6))
-        params = dict(kwargs.pop('params', self.result['params']))
+        params = dict(kwargs.pop('params', self.params))
         groups = kwargs.get('groups', [])
         legend = kwargs.get('legend', {'loc': 'best'})
         format = kwargs.pop('format', 'svg')
@@ -814,9 +810,6 @@ class Benchmark(object):
 
         kwargs['xvals'] = kwargs.pop('xvals', params.pop(xaxis))
         kwargs['groups'] = zip(groups, [params.pop(g) for g in groups])
-        pkeys, pvals = zip(*sorted(params.items()))
-
-        nv = len(list(product(*pvals)))
 
         def save(fig, fname, outline, extra_artists=[]):
             if not format:
@@ -832,14 +825,14 @@ class Benchmark(object):
                         outline += ['<td><img src="%s"></td>' % fname]
             plt.close(fig)
 
+        param_combinations = value_combinations(params)
         for kind in kinds.split(','):
             outline = []
             if subplot:
                 axes = []
                 fig = plt.figure(figname + '_' + kind, figsize=figsize, dpi=300)
-            for p, pv in enumerate(product(*pvals), 1):
-                pdict = zip(pkeys, pv)
-                fsuff = '_'.join('%s%s' % (k, str(v).replace('.', '_')) for k, v in pdict)
+            for p, param in enumerate(param_combinations, 1):
+                fsuff = '_'.join('%s%s' % (k, str(v).replace('.', '_')) for k, v in param.items())
                 # Append speedup to file base name if any
                 if speedup:
                     fsuff += '_speedup' + ''.join(speedup)
@@ -855,7 +848,7 @@ class Benchmark(object):
                             kargs['title'] = None
                             kargs['axis'] = 'tight'
                             kargs.update(subplotargs[r, c])
-                            self.subplot(ax[r][c], xaxis, kind, params=pdict, **kargs)
+                            self.subplot(ax[r][c], xaxis, kind, params=param, **kargs)
                     # Adjust space between subplots
                     fig.subplots_adjust(hspace=hspace, wspace=wspace)
                     if title:
@@ -872,7 +865,7 @@ class Benchmark(object):
                     save(fig, '%s_%s_%s' % (figname, kind, fsuff), outline, extra_artists)
                     outline += ['</tr>']
                 elif subplot:
-                    ax = fig.add_subplot(1, nv, p, sharey=(axes[p-2] if p > 1 else None))
+                    ax = fig.add_subplot(1, len(param_combinations), p, sharey=(axes[p-2] if p > 1 else None))
                     axes.append(ax)
                     kargs = copy(kwargs)
                     kargs['legend'] = False
@@ -881,11 +874,11 @@ class Benchmark(object):
                         kargs['ylabel'] = None
                     if subplotargs:
                         kargs.update(subplotargs[p])
-                    self.subplot(ax, xaxis, kind, params=pdict, **kargs)
+                    self.subplot(ax, xaxis, kind, params=param, **kargs)
                 else:
                     fig = plt.figure(figname + '_' + fsuff, figsize=figsize, dpi=300)
                     ax = fig.add_subplot(111)
-                    self.subplot(ax, xaxis, kind, params=pdict, **kwargs)
+                    self.subplot(ax, xaxis, kind, params=param, **kwargs)
                     outline += ['<tr>']
                     save(fig, '%s_%s_%s' % (figname, kind, fsuff), outline)
                     outline += ['</tr>']
