@@ -411,30 +411,12 @@ class Benchmark(object):
         self.data.to_dataset(name=self.name).to_netcdf(self._file(filename, suffix))
         return self
 
-    def combine(self, files):
-        """Combine results given by the dictionary `files`, with file names as
-        keys and prefixes as values. The prefix is prepended to the regions."""
-        result = {'name': self.name, 'series': self.series}
-        timings = defaultdict(dict)
-        regions = set()
-        for name, pref in files.items():
-            res = self._read(name)
-            for key in ['description', 'meta', 'params']:
-                result[key] = res[key]
-            for k, v in res['timings'].items():
-                # Parametrized benchmark
-                if isinstance(v, dict):
-                    for r, t in v.items():
-                        timings[k][pref + ' ' + r] = t
-                        regions.add(pref + ' ' + r)
-                # Non-parametrized benchmark
-                else:
-                    timings[pref + ' ' + k] = v
-                    regions.add(pref + ' ' + k)
-        result['timings'] = timings
-        result['regions'] = list(regions)
-        self.result = result
-        return result
+    def combine(self, name, labels, files):
+        """Combine results read from the file names in `files` along a new
+        dimension `name` with the labels `labels`."""
+        arrays = [self._read(f) if isinstance(f, str) else f for f in files]
+        self.data = xray.concat(arrays, pd.Index(labels, name=name))
+        return self
 
     def combine_series(self, series, filename=None, aggregate={}, merge=False):
         """Combine the results of one or more series of benchmarks.
