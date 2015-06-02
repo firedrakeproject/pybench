@@ -375,6 +375,9 @@ class Benchmark(object):
         self.meta['end_time'] = str(datetime.now())
         return self
 
+    def __call__(self, **kwargs):
+        return self.data.loc[kwargs]
+
     def _file(self, filename=None, suffix=None):
         """Return a filepath specified by given `filename` and `suffix`, which
         default to the global name and suffix attributes if not given."""
