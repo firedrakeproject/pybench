@@ -418,62 +418,28 @@ class Benchmark(object):
         self.data = xray.concat(arrays, pd.Index(labels, name=name))
         return self
 
-    def combine_series(self, series, filename=None, aggregate={}, merge=False):
+    def combine_series(self, series, filename=None):
         """Combine the results of one or more series of benchmarks.
 
         :param series: a dictionary with the series names as keys and the list
             of values defing the series as value.
         :param filename: the basename for the files to combine (defaults to the
             global name property if not given)
-        :param aggregate: dictionary of regions to aggregate where the key is
-            the resulting region and the value is a list of regions to sum
-        :param merge: if set to `True`, the given series is merged with the
-            existing parameter values. The default setting of `False` assumes
-            that all series are added as new parameters.
         """
-        filename = filename or self.name
-        if merge:
-            pkeys, pvals = zip(*sorted(self.params))
-            for k, v in sorted(series):
-                # The key already exists in the params
-                if k in pkeys:
-                    i = pkeys.index(k)
-                    for p in v:
-                        if p not in pvals[i]:
-                            self.params[i][1].append(p)
-                if k not in pkeys:
-                    self.params.append((k, v))
-        else:
-            self.params = self.params + series
-            pkeys, pvals = zip(*sorted(self.params))
-        result = {'name': self.name, 'params': self.params}
-        timings = self.result.get('timings') or {}
-        skeys, svals = zip(*sorted(series))
-        for svalues in product(*svals):
-            suff = '_'.join('%s%s' % (k, v) for k, v in zip(skeys, svalues))
+        # Add the series as additional dimensions to the parameter space
+        self.params.update(series)
+        data = self._init_data()
+
+        filename = filename or self.benchmark
+
+        # Read file for each combination of the series
+        for s in value_combinations(series):
+            suff = '_'.join('%s%s' % (k, v) for k, v in sorted(s.items()))
             fname = '%s_%s' % (filename, suff)
-            try:
-                res = self._read(fname)
-            except IOError:
-                warn("Series not found: " + str(svalues))
-                continue
-            for key in ['description', 'meta', 'regions']:
-                result[key] = res[key]
-            for target, regions in aggregate.items():
-                # FIXME: this won't currently work with a param series
-                if all([r in res['timings'] for r in regions]):
-                    res['timings'][target] = sum(res['timings'][region]
-                                                 for region in regions)
-            if pkeys == skeys:
-                timings[svalues] = res['timings']
-            else:
-                rkeys = zip(*res['params'])[0]
-                for k, v in res['timings'].items():
-                    key = zip(*sorted(zip(rkeys, k) + zip(skeys, svalues)))[1]
-                    timings[key] = v
-        result['timings'] = timings
-        self.result = result
-        return result
+            data.loc[s] = self._read(fname)[fname]
+
+        self.data = data
+        return self
 
     def dataframe(self, **kwargs):
         """Return results as a pandas DataFrame
