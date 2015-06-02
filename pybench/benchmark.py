@@ -342,6 +342,15 @@ class Benchmark(object):
         warmups = kwargs.pop('warmups', self.warmups)
         average = kwargs.pop('average', self.average)
 
+        # Check that all params are defined at the benchmark level
+        for param, vals in params.items():
+            if param not in self.params:
+                raise ValueError('Unknown parameter ' + param)
+            for v in vals:
+                if v not in self.params[param]:
+                    raise ValueError('Invalid value %s for parameter %s (valid: %s)' %
+                                     (v, param, self.params[param]))
+
         self.meta['start_time'] = str(datetime.now())
 
         for param in value_combinations(params):
