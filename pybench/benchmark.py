@@ -298,17 +298,13 @@ class Benchmark(object):
         out = path.join(profiledir, name)
         if rank == 0 and not path.exists(profiledir):
             makedirs(profiledir)
-        if params:
-            pkeys, pvals = zip(*params)
-        else:
-            pkeys, pvals = (), ()
-        for pvalues in product(*pvals):
+        for param in value_combinations(params):
             if rank == 0:
-                print 'Profile', name, 'for parameters', ', '.join('%s=%s' % (k, v) for k, v in zip(pkeys, pvalues))
-            kwargs.update(dict(zip(pkeys, pvalues)))
+                print 'Profile', name, 'for parameters', ', '.join('%s=%s' % (k, v) for k, v in sorted(param.items()))
+            kwargs.update(param)
             # Dry run
             method(**kwargs)
-            suff = '_'.join('%s%s' % (k, v) for k, v in zip(pkeys, pvals))
+            suff = '_'.join('%s%s' % (k, v) for k, v in sorted(param.items()))
             for r in regions:
                 self.profiles[r] = Profile()
             if 'total' in regions:
