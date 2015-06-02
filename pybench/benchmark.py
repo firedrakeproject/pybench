@@ -477,24 +477,17 @@ class Benchmark(object):
             * filename: base name of output file
             * dataframe: pandas DataFrame to export (when given, the keyword
               arguments params, regions, skip and timings are ignored)
-            * params: benchmark parameters
             * tabledir: output directory
             * regions: regions to output
-            * timings: benchmark timings
-            * skip: parameters to skip
             * format: comma-separated list of output formats (html, latex, both)
             * precision: precision of floating point values
         """
         if rank > 0:
             return
-        filename = kwargs.pop('filename', self.result['name'])
-        df = kwargs.get('dataframe')
-        if df is None:
-            params = kwargs.pop('params', self.result['params'])
-            regions = kwargs.pop('regions', self.result['regions'])
-            skip = kwargs.pop('skip', [])
-            timings = kwargs.pop('timings', self.result['timings'])
-            df = self.dataframe(params=params, regions=regions, skip=skip, timings=timings)
+        filename = kwargs.pop('filename', self.name)
+        df = kwargs.get('dataframe') or self.data.to_dataframe()
+        if kwargs.get('regions'):
+            df = df[kwargs.get('regions')]
         tabledir = kwargs.pop('tabledir', self.tabledir)
         formats = kwargs.pop('format', 'html').split(',')
         if not path.exists(tabledir):
@@ -511,6 +504,7 @@ class Benchmark(object):
         for fmt in formats:
             with open(path.join(tabledir, "%s.%s" % (filename, fmt)), 'w') as f:
                 f.write(render[fmt](df))
+        return self
 
     def lookup(self, region, params, keyset=()):
         """Retrieve a specific timing from benchmark results
