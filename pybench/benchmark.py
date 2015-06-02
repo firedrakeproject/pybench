@@ -166,6 +166,8 @@ class Benchmark(object):
     @contextmanager
     def timed_region(self, name, normalize=1.0):
         """A context manger for timing a region of code identified by name."""
+        if name not in self.regions:
+            raise ValueError("%s is not a valid region: %s" % (name, self.regions))
         if name in self.profiles:
             self.profiles[name].enable()
         t_ = self.timer()
@@ -176,6 +178,8 @@ class Benchmark(object):
 
     def register_timing(self, name, value):
         """Register the timing `value` for the region identified by `name`."""
+        if name not in self.regions:
+            raise ValueError("%s is not a valid region: %s" % (name, self.regions))
         self.timings[name] += value
 
     def _args(self, kwargs):
