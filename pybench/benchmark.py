@@ -115,6 +115,8 @@ class Benchmark(object):
         * node_threshold: eliminate nodes below this threshold
         * edge_threshold: eliminate edges below this threshold
         * format: comma-separated list of output formats (supported by dot)"""
+    regions = ['total']
+    """Regions to time."""
     profileregions = ['total']
     """Regions to create profile graphs for."""
     meta = {}
@@ -141,7 +143,6 @@ class Benchmark(object):
                 setattr(self, k, v)
         if isinstance(self.method, str):
             self.method = getattr(self, self.method, self.method)
-        self.regions = defaultdict(float)
         self.profiles = {}
         self.meta['benchmark_version'] = get_git_revision()
         self.meta['pybench_version'] = get_git_revision(path.dirname(__file__))
@@ -151,6 +152,7 @@ class Benchmark(object):
             self.meta['jobid'] = getenv('PBS_JOBID')
         if getenv('PBS_JOBNAME'):
             self.meta['jobname'] = getenv('PBS_JOBNAME')
+        self.timings = defaultdict(float)
 
     @property
     def name(self):
@@ -168,13 +170,13 @@ class Benchmark(object):
             self.profiles[name].enable()
         t_ = self.timer()
         yield
-        self.regions[name] += (self.timer() - t_) * normalize
+        self.timings[name] += (self.timer() - t_) * normalize
         if name in self.profiles:
             self.profiles[name].disable()
 
     def register_timing(self, name, value):
         """Register the timing `value` for the region identified by `name`."""
-        self.regions[name] += value
+        self.timings[name] += value
 
     def _args(self, kwargs):
         """Parse name, params and method from the kwargs dictionary."""
@@ -329,7 +331,7 @@ class Benchmark(object):
                        'warmups': warmups,
                        'average': average.__name__,
                        'method': method.__name__,
-                       'regions': self.regions.keys(),
+                       'regions': self.regions,
                        'meta': self.meta,
                        'series': self.series,
                        'timings': timings}
@@ -351,16 +353,16 @@ class Benchmark(object):
                 method(**kwargs)
 
             def bench():
-                self.regions = defaultdict(float)
+                self.timings = defaultdict(float)
                 with self.timed_region('total'):
                     method(**kwargs)
-                return self.regions
+                return self.timings
             if rank == 0:
                 print '  Running', repeats, 'benchmark runs'
             times = [bench() for _ in range(repeats)]
             # Average over all timed regions
             times = dict((k, average(d[k] for d in times))
-                         for k in self.regions.keys())
+                         for k in self.timings.keys())
             if pvalues:
                 timings[pvalues] = times
             else:
