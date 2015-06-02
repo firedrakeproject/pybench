@@ -18,6 +18,8 @@ from warnings import warn
 import pandas as pd
 import xray
 
+from utils import value_combinations
+
 # Imports for plot, warn if those fail but do not die
 try:
     import matplotlib as mpl
@@ -92,7 +94,7 @@ def parser(**kwargs):
 
 class Benchmark(object):
     """An abstract base class for benchmarks."""
-    params = []
+    params = {}
     """The parameters to run the benchmark for: a list of pairs, each of which
     is the parameter name and a list of benchmark values."""
     repeats = 3
@@ -340,29 +342,14 @@ class Benchmark(object):
         warmups = kwargs.pop('warmups', self.warmups)
         average = kwargs.pop('average', self.average)
 
-        timings = self.result.get('timings') or {}
-        self.result = {'name': name,
-                       'description': description,
-                       'params': sorted(params),
-                       'repeats': repeats,
-                       'warmups': warmups,
-                       'average': average.__name__,
-                       'method': method.__name__,
-                       'regions': self.regions,
-                       'meta': self.meta,
-                       'series': self.series,
-                       'timings': timings}
-        if params:
-            pkeys, pvals = zip(*sorted(params))
-        else:
-            pkeys, pvals = (), ()
         self.meta['start_time'] = str(datetime.now())
-        for pvalues in product(*pvals):
+
+        for param in value_combinations(params):
             if rank == 0:
-                pstr = ', '.join('%s=%s' % (k, v) for k, v in zip(pkeys, pvalues))
+                pstr = ', '.join('%s=%s' % (k, v) for k, v in param.items())
                 sstr = ', '.join('%s=%s' % (k, v) for k, v in self.series.items())
                 print 'Benchmark', name, 'for parameters', pstr, 'series', sstr
-            kwargs.update(dict(zip(pkeys, pvalues)))
+            kwargs.update(param)
 
             if rank == 0:
                 print '  Running', warmups, 'warmup runs'
@@ -377,15 +364,11 @@ class Benchmark(object):
             if rank == 0:
                 print '  Running', repeats, 'benchmark runs'
             times = [bench() for _ in range(repeats)]
-            # Average over all timed regions
-            times = dict((k, average(d[k] for d in times))
-                         for k in self.timings.keys())
-            if pvalues:
-                timings[pvalues] = times
-            else:
-                self.result['timings'] = times
+            # Average over all timings
+            if times:
+                self.data.loc[param] = [average(d[k] for d in times) for k in self.timings.keys()]
         self.meta['end_time'] = str(datetime.now())
-        return self.result
+        return self
 
     def _file(self, filename=None, suffix=None):
         """Return a filepath specified by given `filename` and `suffix`, which
