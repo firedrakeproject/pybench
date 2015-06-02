@@ -418,13 +418,15 @@ class Benchmark(object):
         self.data = xray.concat(arrays, pd.Index(labels, name=name))
         return self
 
-    def combine_series(self, series, filename=None):
+    def combine_series(self, series, filename=None, coords=None):
         """Combine the results of one or more series of benchmarks.
 
         :param series: a dictionary with the series names as keys and the list
             of values defing the series as value.
         :param filename: the basename for the files to combine (defaults to the
             global name property if not given)
+        :param coords: dictionary of coordinate axes to relabel, where the key
+            is the coordinate and the value is the list of new labels
         """
         # Add the series as additional dimensions to the parameter space
         self.params.update(series)
@@ -437,6 +439,10 @@ class Benchmark(object):
             suff = '_'.join('%s%s' % (k, v) for k, v in sorted(s.items()))
             fname = '%s_%s' % (filename, suff)
             data.loc[s] = self._read(fname)[fname]
+
+        # Re-label coordinates if requested
+        for k, v in (coords or {}).items():
+            data.coords[k] = v
 
         self.data = data
         return self
