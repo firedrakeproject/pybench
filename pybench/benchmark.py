@@ -15,6 +15,9 @@ from subprocess import call, check_output, CalledProcessError
 import time
 from warnings import warn
 
+import pandas as pd
+import xray
+
 # Imports for plot, warn if those fail but do not die
 try:
     import matplotlib as mpl
@@ -153,6 +156,16 @@ class Benchmark(object):
         if getenv('PBS_JOBNAME'):
             self.meta['jobname'] = getenv('PBS_JOBNAME')
         self.timings = defaultdict(float)
+        self.data = self._init_data()
+
+    def _init_data(self, params=None):
+        params = dict(params or self.params)
+        # Add the regions as another dimension to the results data
+        params['region'] = self.regions
+        shape = tuple(len(p) for p in params.values())
+        array = np.zeros(shape=shape)
+        array.fill(np.nan)
+        return xray.DataArray(array, coords=params, name=self.benchmark)
 
     @property
     def name(self):
