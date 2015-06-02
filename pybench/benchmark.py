@@ -131,7 +131,7 @@ class Benchmark(object):
     series = {}
     """Benchmark series created from several invocations of the script e.g.
     for parallel runs on variable number of processors."""
-    suffix = '.dat'
+    suffix = '.nc'
     """Suffix for the result file to write."""
 
     def __init__(self, **kwargs):
@@ -390,28 +390,26 @@ class Benchmark(object):
         return path.join(self.resultsdir, filename + suffix)
 
     def _read(self, filename=None, suffix=None):
-        """Read a file specified by given `filename` and `suffix`, which
-        default to the global name and suffix attributes if not given, and
-        evaluate its contents."""
-        with open(self._file(filename, suffix)) as f:
-            return eval(f.read())
+        """Read a netCDF file specified by given `filename` and `suffix`, which
+        default to the global name and suffix attributes if not given."""
+        return xray.open_dataset(self._file(filename, suffix))
 
     def load(self, filename=None, suffix=None):
         """Load results from a file specified by given `filename` and `suffix`,
         which default to the global name and suffix attributes if not given."""
         try:
-            self.result = self._read(filename)
+            self.data = self._read(filename)
         except IOError:
-            self.result = {}
-        return self.result
+            self.data = self._init_data()
+        return self
 
     def save(self, filename=None, suffix=None):
         """Save results to a file specified by given `filename` and `suffix`,
         which default to the global name and suffix attributes if not given."""
         if rank > 0:
             return
-        with open(self._file(filename, suffix), 'w') as f:
-            pprint(self.result, f)
+        self.data.to_dataset(name=self.name).to_netcdf(self._file(filename, suffix))
+        return self
 
     def combine(self, files):
         """Combine results given by the dictionary `files`, with file names as
