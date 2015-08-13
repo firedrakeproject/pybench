@@ -158,12 +158,10 @@ class Benchmark(object):
         if getenv('PBS_JOBNAME'):
             self.meta['jobname'] = getenv('PBS_JOBNAME')
         self.timings = defaultdict(float)
-        self.data = self._init_data()
+        self.data = xray.Dataset()
 
     def _init_data(self, params=None):
         params = dict(params or self.params)
-        # Add the regions as another dimension to the results data
-        params['region'] = self.regions
         shape = tuple(len(p) for p in params.values())
         array = np.zeros(shape=shape)
         array.fill(np.nan)
@@ -181,8 +179,6 @@ class Benchmark(object):
     @contextmanager
     def timed_region(self, name, normalize=1.0):
         """A context manger for timing a region of code identified by name."""
-        if name not in self.regions:
-            raise ValueError("%s is not a valid region: %s" % (name, self.regions))
         if name in self.profiles:
             self.profiles[name].enable()
         t_ = self.timer()
@@ -193,8 +189,6 @@ class Benchmark(object):
 
     def register_timing(self, name, value):
         """Register the timing `value` for the region identified by `name`."""
-        if name not in self.regions:
-            raise ValueError("%s is not a valid region: %s" % (name, self.regions))
         self.timings[name] += value
 
     def _args(self, kwargs):
@@ -371,12 +365,15 @@ class Benchmark(object):
             times = [bench() for _ in range(repeats)]
             # Average over all timings
             if times:
-                self.data.loc[param] = [average(d[k] for d in times) for k in self.timings.keys()]
+                for k in self.timings.keys():
+                    if k not in self.data:
+                        self.data[k] = self._init_data(params=params)
+                    self.data[k].loc[param] = average(d[k] for d in times)
         self.meta['end_time'] = str(datetime.now())
         return self
 
-    def __call__(self, **kwargs):
-        return self.data.loc[kwargs]
+    def __call__(self, region, **kwargs):
+        return self.data[region].loc[kwargs]
 
     def _file(self, filename=None, suffix=None):
         """Return a filepath specified by given `filename` and `suffix`, which
@@ -400,7 +397,7 @@ class Benchmark(object):
         try:
             self.data = self._read(filename)
         except IOError:
-            self.data = self._init_data()
+            self.data = xray.Dataset()
         return self
 
     def save(self, filename=None, suffix=None):
@@ -408,7 +405,7 @@ class Benchmark(object):
         which default to the global name and suffix attributes if not given."""
         if rank > 0:
             return
-        self.data.to_dataset(name=self.name).to_netcdf(self._file(filename, suffix))
+        self.data.to_netcdf(self._file(filename, suffix))
         return self
 
     def combine(self, name, labels, files):
@@ -430,7 +427,7 @@ class Benchmark(object):
         """
         # Add the series as additional dimensions to the parameter space
         self.params.update(series)
-        data = self._init_data()
+        self.data = xray.Dataset()
 
         filename = filename or self.benchmark
 
@@ -438,13 +435,17 @@ class Benchmark(object):
         for s in value_combinations(series):
             suff = '_'.join('%s%s' % (k, v) for k, v in sorted(s.items()))
             fname = '%s_%s' % (filename, suff)
-            data.loc[s] = self._read(fname)[fname]
+            for k, v in self._read(fname).variables.items():
+                if isinstance(v, xray.Coordinate):
+                    continue
+                if k not in self.data:
+                    self.data[k] = self._init_data(params=self.params)
+                self.data[k].loc[s] = v.values
 
         # Re-label coordinates if requested
         for k, v in (coords or {}).items():
-            data.coords[k] = v
+            self.data.coords[k] = v
 
-        self.data = data
         return self
 
     def table(self, **kwargs):
