@@ -519,6 +519,8 @@ class Benchmark(object):
 
         :param kwargs: keyword arguments override values given in the results
             * filename: base name of output file
+            * dataframe: pandas DataFrame to export (when given, the keyword
+              arguments params, regions, skip and timings are ignored)
             * params: benchmark parameters
             * tabledir: output directory
             * regions: regions to output
@@ -529,16 +531,17 @@ class Benchmark(object):
         if rank > 0:
             return
         filename = kwargs.pop('filename', self.result['name'])
-        params = kwargs.pop('params', self.result['params'])
+        df = kwargs.get('dataframe')
+        if df is None:
+            params = kwargs.pop('params', self.result['params'])
+            regions = kwargs.pop('regions', self.result['regions'])
+            skip = kwargs.pop('skip', [])
+            timings = kwargs.pop('timings', self.result['timings'])
+            df = self.dataframe(params=params, regions=regions, skip=skip, timings=timings)
         tabledir = kwargs.pop('tabledir', self.tabledir)
-        regions = kwargs.pop('regions', self.result['regions'])
-        timings = kwargs.pop('timings', self.result['timings'])
-        skip = kwargs.pop('skip', [])
         formats = kwargs.pop('format', 'html').split(',')
         if not path.exists(tabledir):
             makedirs(tabledir)
-
-        df = self.dataframe(params=params, regions=regions, skip=skip, timings=timings)
 
         # Pandas is somewhat dumb when it comes to formatting tables, so strip
         # the first line declaring the table and use our own in html_table
