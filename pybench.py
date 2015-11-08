@@ -44,6 +44,11 @@ html_table = """
 <html>
 <head>
   <link rel="stylesheet" href="http://github.hubspot.com/sortable/css/sortable-theme-bootstrap.css" />
+  <style>
+    table[data-sortable] td {
+      text-align: right;
+    }
+  </style>
 </head>
 <body>
   <table class="sortable-theme-bootstrap" data-sortable>
