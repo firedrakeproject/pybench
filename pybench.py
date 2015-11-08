@@ -41,26 +41,38 @@ except ImportError:
     rank = 0
 
 html_table = """
-<table>
-  <tr>
-  {%- for p in parameters %}
-    <th>{{ p }}</th>
+<html>
+<head>
+  <link rel="stylesheet" href="http://github.hubspot.com/sortable/css/sortable-theme-bootstrap.css" />
+</head>
+<body>
+  <table class="sortable-theme-bootstrap" data-sortable>
+  <thead>
+    <tr>
+    {%- for p in parameters %}
+      <th>{{ p }}</th>
+    {%- endfor %}
+    {%- for r in regions %}
+      <th>{{ r }}</th>
+    {%- endfor %}
+    </tr>
+  </thead>
+  <tbody>
+  {%- for params, vals in timings %}
+    <tr>
+    {%- for p in params %}
+      <td>{{ p }}</td>
+    {%- endfor %}
+    {%- for v in vals %}
+      <td>{{ v|round(4) }}</td>
+    {%- endfor %}
+    </tr>
   {%- endfor %}
-  {%- for r in regions %}
-    <th>{{ r }}</th>
-  {%- endfor %}
-  </tr>
-{%- for params, vals in timings %}
-  <tr>
-  {%- for p in params %}
-    <th>{{ p }}</th>
-  {%- endfor %}
-  {%- for v in vals %}
-    <td>{{ v|round(4) }}</td>
-  {%- endfor %}
-  </tr>
-{%- endfor %}
-</table>
+  </tbody>
+  </table>
+  <script src="http://github.hubspot.com/sortable/js/sortable.min.js"></script>
+</body>
+</html>
 """
 
 tex_table = """
