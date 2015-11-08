@@ -543,13 +543,16 @@ class Benchmark(object):
         if not path.exists(tabledir):
             makedirs(tabledir)
 
+        # Reset the index only if it is a MultiIndex
+        if hasattr(df.index, 'levels'):
+            df.reset_index(inplace=True)
         # Pandas is somewhat dumb when it comes to formatting tables, so strip
         # the first line declaring the table and use our own in html_table
         render = {'html': lambda df: html_table % '\n'.join(df.to_html().split('\n')[1:]),
                   'tex': lambda df: df.to_latex(index=False)}
         for fmt in formats:
             with open(path.join(tabledir, "%s.%s" % (filename, fmt)), 'w') as f:
-                f.write(render[fmt](df.reset_index()))
+                f.write(render[fmt](df))
 
     def lookup(self, region, params, keyset=()):
         """Retrieve a specific timing from benchmark results
