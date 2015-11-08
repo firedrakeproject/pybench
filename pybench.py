@@ -43,7 +43,7 @@ except ImportError:
 html_table = """
 <html>
 <head>
-  <link rel="stylesheet" href="http://github.hubspot.com/sortable/css/sortable-theme-bootstrap.css" />
+  <link rel="stylesheet" href="https://github.hubspot.com/sortable/css/sortable-theme-bootstrap.css" />
   <style>
     table[data-sortable] td {
       text-align: right;
@@ -53,7 +53,7 @@ html_table = """
 <body>
   <table class="sortable-theme-bootstrap" data-sortable>
   %s
-  <script src="http://github.hubspot.com/sortable/js/sortable.min.js"></script>
+  <script src="https://github.hubspot.com/sortable/js/sortable.min.js"></script>
 </body>
 </html>
 """
