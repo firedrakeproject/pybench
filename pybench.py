@@ -52,42 +52,10 @@ html_table = """
 </head>
 <body>
   <table class="sortable-theme-bootstrap" data-sortable>
-  <thead>
-    <tr>
-    {%- for p in parameters %}
-      <th>{{ p }}</th>
-    {%- endfor %}
-    {%- for r in regions %}
-      <th>{{ r }}</th>
-    {%- endfor %}
-    </tr>
-  </thead>
-  <tbody>
-  {%- for params, vals in timings %}
-    <tr>
-    {%- for p in params %}
-      <td>{{ p }}</td>
-    {%- endfor %}
-    {%- for v in vals %}
-      <td>{{ v|round(4) }}</td>
-    {%- endfor %}
-    </tr>
-  {%- endfor %}
-  </tbody>
-  </table>
+  %s
   <script src="http://github.hubspot.com/sortable/js/sortable.min.js"></script>
 </body>
 </html>
-"""
-
-tex_table = """
-\\begin{tabulary}{\\textwidth}{%{- for _ in parameters %}C%{- endfor %}|%{- for _ in regions %}C%{- endfor %}}
-  %{{ parameters|map('bold')|join(' & ') %}} & %{{ regions|map('bold')|join(' & ') %}} \\\\
-  \\hline
-%{- for params, vals in timings %}
-  %{{ params|map('bold')|join(' & ') %}} & %{{ vals|map('round', 4)|join(' & ') %}} \\\\
-%{- endfor %}
-\\end{tabulary}
 """
 
 
@@ -547,7 +515,7 @@ class Benchmark(object):
         return df.set_index([p for p in pkeys if p not in skip])
 
     def table(self, **kwargs):
-        """Export results as html or latex table.
+        """Export results as html or latex table (requires pandas).
 
         :param kwargs: keyword arguments override values given in the results
             * filename: base name of output file
@@ -570,30 +538,15 @@ class Benchmark(object):
         if not path.exists(tabledir):
             makedirs(tabledir)
 
-        pkeys, pvals = zip(*sorted(params))
-        idx = [pkeys.index(s) for s in skip]
-        times = [(tuple(p for i, p in enumerate(pv) if i not in idx),
-                  tuple(timings[pv][r] for r in regions))
-                 for pv in product(*pvals)]
+        df = self.dataframe(params=params, regions=regions, skip=skip, timings=timings)
 
-        from jinja2 import Environment, Template
-
-        def texbold(value):
-            return '\\textbf{%s}' % value
-        texenv = Environment(block_start_string='%{',
-                             block_end_string='%}',
-                             variable_start_string='%{{',
-                             variable_end_string='%}}')
-        texenv.filters['bold'] = texbold
-        templates = {'html': Template(html_table),
-                     'tex': texenv.from_string(tex_table)}
-
-        d = {'parameters': [p for p in pkeys if p not in skip],
-             'timings': times,
-             'regions': regions}
+        # Pandas is somewhat dumb when it comes to formatting tables, so strip
+        # the first line declaring the table and use our own in html_table
+        render = {'html': lambda df: html_table % '\n'.join(df.to_html().split('\n')[1:]),
+                  'tex': lambda df: df.to_latex()}
         for fmt in formats:
             with open(path.join(tabledir, "%s.%s" % (filename, fmt)), 'w') as f:
-                f.write(templates[fmt].render(d))
+                f.write(render[fmt](df.reset_index()))
 
     def lookup(self, region, params, keyset=()):
         """Retrieve a specific timing from benchmark results
