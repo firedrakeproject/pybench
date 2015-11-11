@@ -447,29 +447,6 @@ class Benchmark(object):
         self.data = data
         return self
 
-    def dataframe(self, **kwargs):
-        """Return results as a pandas DataFrame
-
-        :param kwargs: keyword arguments override values given in the results
-            * params: benchmark parameters
-            * regions: regions to output
-            * timings: benchmark timings
-            * skip: parameters to skip
-        """
-        import pandas as pd
-        params = kwargs.pop('params', self.result['params'])
-        regions = kwargs.pop('regions', self.result['regions'])
-        timings = kwargs.pop('timings', self.result['timings'])
-        skip = kwargs.pop('skip', [])
-
-        pkeys, pvals = zip(*sorted(params))
-        idx = [pkeys.index(s) for s in skip]
-        df = pd.DataFrame([dict(list((pkeys[i], p) for i, p in enumerate(pv)
-                                     if i not in idx) +
-                                list((r, timings[pv][r]) for r in regions))
-                           for pv in product(*pvals)])
-        return df.set_index([p for p in pkeys if p not in skip])
-
     def table(self, **kwargs):
         """Export results as html or latex table (requires pandas).
 
