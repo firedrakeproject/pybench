@@ -366,11 +366,14 @@ class Benchmark(object):
             # Average over all timings
             if times:
                 for k in self.timings.keys():
-                    if k not in self.data:
-                        self.data[k] = self._init_data(params=params)
-                    self.data[k].loc[param] = average(d[k] for d in times)
+                    self[k].loc[param] = average(d[k] for d in times)
         self.meta['end_time'] = str(datetime.now())
         return self
+
+    def __getitem__(self, region):
+        if region not in self.data:
+            self.data[region] = self._init_data(params=self.params)
+        return self.data[region]
 
     def __call__(self, region, **kwargs):
         return self.data[region].loc[kwargs]
@@ -436,9 +439,7 @@ class Benchmark(object):
             suff = '_'.join('%s%s' % (k, v) for k, v in sorted(s.items()))
             fname = '%s_%s' % (filename, suff)
             for k, v in self._read(fname).data_vars.items():
-                if k not in self.data:
-                    self.data[k] = self._init_data(params=self.params)
-                self.data[k].loc[s] = v.values
+                self[k].loc[s] = v.values
 
         # Re-label coordinates if requested
         for k, v in (coords or {}).items():
