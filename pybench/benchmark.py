@@ -435,9 +435,7 @@ class Benchmark(object):
         for s in value_combinations(series):
             suff = '_'.join('%s%s' % (k, v) for k, v in sorted(s.items()))
             fname = '%s_%s' % (filename, suff)
-            for k, v in self._read(fname).variables.items():
-                if isinstance(v, xray.Coordinate):
-                    continue
+            for k, v in self._read(fname).data_vars.items():
                 if k not in self.data:
                     self.data[k] = self._init_data(params=self.params)
                 self.data[k].loc[s] = v.values
