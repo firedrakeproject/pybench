@@ -477,9 +477,9 @@ class Benchmark(object):
                 result[key] = res[key]
             for target, regions in aggregate.items():
                 # FIXME: this won't currently work with a param series
-                if all([r in res['timings'] for r in regions]):
-                    res['timings'][target] = sum(res['timings'][region]
-                                                 for region in regions)
+                # If source region does not exist, take value 0
+                res['timings'][target] = sum(res['timings'].get(region, 0.)
+                                             for region in regions)
             if pkeys == skeys:
                 timings[svalues] = res['timings']
             else:
