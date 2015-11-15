@@ -238,13 +238,20 @@ class Benchmark(object):
         :param kwargs: any keyword arguments are forwarded to the parser"""
         args, extra = self.parser(**kwargs).parse_known_args()
         extra = filter(lambda s: '=' in s, extra)
-        # Any extra arguments are passed on to the method, but need converting
-        # to the right type first
-        f = self.method.im_func
-        defaults = dict(zip(f.func_code.co_varnames[1:f.func_code.co_argcount], f.func_defaults))
-        # Caveat: bool("any_string") is always True, but bool("") is always False
-        convert = lambda k, v: (k, v in ['True', 'true'] if isinstance(defaults[k], bool)
-                                else type(defaults[k])(v))
+
+        # Any extra arguments are passed on to the method, but need
+        # converting to the right type first
+        def convert(k, v):
+            f = self.method.im_func
+            defaults = dict(zip(f.func_code.co_varnames[1:f.func_code.co_argcount], f.func_defaults))
+            types = {'repeats': int, 'warmups': int, 'description': str}
+            if k in types:
+                return k, types[k](v)
+            # Caveat: bool("any_string") is always True, but bool("") is always False
+            if isinstance(defaults[k], bool):
+                return k, v in ['True', 'true']
+            return k, type(defaults[k])(v)
+
         fargs = dict(convert(*a.split('=')) for a in extra)
         if args.load or args.load is None:
             self.load(args.load)
@@ -510,7 +517,7 @@ class Benchmark(object):
         idx = [pkeys.index(s) for s in skip]
         df = pd.DataFrame([dict(list((pkeys[i], p) for i, p in enumerate(pv)
                                      if i not in idx) +
-                                list((r, timings[pv][r]) for r in regions))
+                                list((r, self.lookup(r, zip(pkeys, pv))) for r in regions))
                            for pv in product(*pvals)])
         return df.set_index([p for p in pkeys if p not in skip])
 
