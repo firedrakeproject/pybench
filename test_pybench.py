@@ -38,8 +38,8 @@ def test_sleep():
 
 def test_timed_region():
     result = TimedRegion().run()
-    assert result['timings']['total'] > 0.0
-    assert result['timings']['stuff'] > 0.0
+    assert result['timings']['total'] >= 0.0
+    assert result['timings']['stuff'] >= 0.0
 
 
 def test_save_load(tmpdir):
@@ -65,7 +65,7 @@ def test_combine_regions(tmpdir):
 def test_parametrized():
     result = Parametrized().run()
     _, pvalues = zip(*result['params'])
-    assert all(result['timings'][p]['total'] > 0.0
+    assert all(result['timings'][p]['total'] >= 0.0
                for p in product(*pvalues))
 
 
