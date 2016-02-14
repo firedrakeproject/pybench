@@ -510,7 +510,6 @@ class Benchmark(object):
         import pandas as pd
         params = kwargs.pop('params', self.result['params'])
         regions = kwargs.pop('regions', self.result['regions'])
-        timings = kwargs.pop('timings', self.result['timings'])
         skip = kwargs.pop('skip', [])
 
         pkeys, pvals = zip(*sorted(params))
@@ -651,7 +650,6 @@ class Benchmark(object):
         linewidth = kwargs.pop('linewidth', 2)
         regions = kwargs.pop('regions', self.result['regions'])
         ticksize = kwargs.get('ticksize')
-        timings = kwargs.pop('timings', self.result['timings'])
         title = kwargs.pop('title', self.name)
         transform = kwargs.get('transform')
         xlabel = kwargs.pop('xlabel', None)
@@ -673,7 +671,6 @@ class Benchmark(object):
         groups = dict(kwargs.pop('groups'))
         groups, gvals = zip(*groups.items()) if groups else ([], [])
         params = dict(kwargs.pop('params'))
-        pvals = zip(*sorted(params))[1]
 
         nregions = len(regions)
         ngroups = int(np.prod([len(g) for g in gvals]))
