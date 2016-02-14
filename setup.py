@@ -19,7 +19,6 @@ setup(name='pybench',
           'Programming Language :: C',
           'Programming Language :: Cython',
           'Programming Language :: Python :: 2',
-          'Programming Language :: Python :: 2.6',
           'Programming Language :: Python :: 2.7',
       ],
       py_modules=['pybench'])
