@@ -11,6 +11,8 @@ setup(name='pybench',
       author_email='florian.rathgeber@gmail.com',
       url='https://github.com/firedrakeproject/pybench',
       license='License :: OSI Approved :: BSD License',
+      setup_requires=['pytest-runner'],
+      tests_require=['pytest', 'pytest-flake8'],
       classifiers=[
           'Development Status :: 3 - Alpha',
           'Intended Audience :: Developers',
