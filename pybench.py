@@ -344,7 +344,7 @@ class Benchmark(object):
                        'warmups': warmups,
                        'average': average.__name__,
                        'method': method.__name__,
-                       'regions': self.regions.keys(),
+                       'regions': list(self.regions.keys()),
                        'meta': self.meta,
                        'series': self.series,
                        'timings': timings}
