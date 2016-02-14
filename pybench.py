@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 from argparse import ArgumentParser
 from collections import defaultdict
 from contextlib import contextmanager
@@ -296,7 +298,7 @@ class Benchmark(object):
             pkeys, pvals = (), ()
         for pvalues in product(*pvals):
             if rank == 0:
-                print 'Profile', name, 'for parameters', ', '.join('%s=%s' % (k, v) for k, v in zip(pkeys, pvalues))
+                print('Profile', name, 'for parameters', ', '.join('%s=%s' % (k, v) for k, v in zip(pkeys, pvalues)))
             kwargs.update(dict(zip(pkeys, pvalues)))
             # Dry run
             method(**kwargs)
@@ -355,11 +357,11 @@ class Benchmark(object):
             if rank == 0:
                 pstr = ', '.join('%s=%s' % (k, v) for k, v in zip(pkeys, pvalues))
                 sstr = ', '.join('%s=%s' % (k, v) for k, v in self.series.items())
-                print 'Benchmark', name, 'for parameters', pstr, 'series', sstr
+                print('Benchmark', name, 'for parameters', pstr, 'series', sstr)
             kwargs.update(dict(zip(pkeys, pvalues)))
 
             if rank == 0:
-                print '  Running', warmups, 'warmup runs'
+                print('  Running', warmups, 'warmup runs')
             for _ in range(warmups):
                 method(**kwargs)
 
@@ -369,7 +371,7 @@ class Benchmark(object):
                     method(**kwargs)
                 return self.regions
             if rank == 0:
-                print '  Running', repeats, 'benchmark runs'
+                print('  Running', repeats, 'benchmark runs')
             times = [bench() for _ in range(repeats)]
             # Average over all timed regions
             times = dict((k, average(d[k] for d in times))
